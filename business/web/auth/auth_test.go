@@ -6,8 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/lib/pq"
+
+	"github.com/rmsj/service/business/web/auth"
 )
 
 // Success and failure markers.
@@ -42,7 +44,7 @@ func Test_Auth(t *testing.T) {
 					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 				},
-				Roles: []string{auth.RoleAdmin},
+				Roles: pq.StringArray{auth.RoleAdmin},
 			}
 
 			token, err := a.GenerateToken(claims)

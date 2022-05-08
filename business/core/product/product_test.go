@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/rmsj/service/business/core/product"
+	"github.com/rmsj/service/business/data/dbtest"
+	"github.com/rmsj/service/foundation/docker"
 )
 
 var c *docker.Container
@@ -22,13 +23,14 @@ func TestMain(m *testing.M) {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("TEST PRODUCT")
 	defer dbtest.StopDB(c)
 
 	m.Run()
 }
 
 func Test_Product(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testprod")
+	log, db, teardown := dbtest.NewUnit(t, c, "test_prod")
 	t.Cleanup(teardown)
 
 	core := product.NewCore(log, db)
@@ -61,7 +63,7 @@ func Test_Product(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product by ID.", dbtest.Success, testID)
 
 			if diff := cmp.Diff(prd, saved); diff != "" {
-				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", dbtest.Failed, testID, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s %+v - %+v", dbtest.Failed, testID, diff, prd, saved)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", dbtest.Success, testID)
 

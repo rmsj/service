@@ -8,13 +8,14 @@ import (
 	"net/http/pprof"
 	"os"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/debug/checkgrp"
-	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/app/services/sales-api/handlers/debug/checkgrp"
+	v1 "github.com/rmsj/service/app/services/sales-api/handlers/v1"
+	"github.com/rmsj/service/business/web/auth"
+	"github.com/rmsj/service/business/web/v1/mid"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Options represent optional parameters.
@@ -34,7 +35,7 @@ type APIMuxConfig struct {
 	Shutdown chan os.Signal
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
-	DB       *sqlx.DB
+	DB       *gorm.DB
 }
 
 // APIMux constructs a http.Handler with all application routes defined.
@@ -109,7 +110,7 @@ func DebugStandardLibraryMux() *http.ServeMux {
 // debug application routes for the service. This bypassing the use of the
 // DefaultServerMux. Using the DefaultServerMux would be a security risk since
 // a dependency could inject a handler into our service without us knowing it.
-func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
+func DebugMux(build string, log *zap.SugaredLogger, db *gorm.DB) http.Handler {
 	mux := DebugStandardLibraryMux()
 
 	// Register debug check endpoints.

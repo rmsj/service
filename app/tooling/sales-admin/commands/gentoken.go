@@ -6,12 +6,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/golang-jwt/jwt/v4"
 	"go.uber.org/zap"
+
+	"github.com/rmsj/service/business/core/user"
+	"github.com/rmsj/service/business/sys/database"
+	"github.com/rmsj/service/business/web/auth"
+	"github.com/rmsj/service/foundation/keystore"
 )
 
 // GenToken generates a JWT for the specified user.
@@ -25,7 +26,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
-	defer db.Close()
+	defer database.Close(db)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

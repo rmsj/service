@@ -9,11 +9,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product/db"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/business/core/product/db"
+	"github.com/rmsj/service/business/sys/database"
+	"github.com/rmsj/service/business/sys/validate"
 )
 
 // Set of error variables for CRUD operations.
@@ -24,13 +25,15 @@ var (
 
 // Core manages the set of APIs for product access.
 type Core struct {
-	store db.Store
+	log *zap.SugaredLogger
+	db  *gorm.DB
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(l *zap.SugaredLogger, d *gorm.DB) Core {
 	return Core{
-		store: db.NewStore(log, sqlxDB),
+		log: l,
+		db:  d,
 	}
 }
 
@@ -42,7 +45,7 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 	}
 
 	dbPrd := db.Product{
-		ID:          validate.GenerateID(),
+		ProductID:   validate.GenerateID(),
 		Name:        np.Name,
 		Cost:        np.Cost,
 		Quantity:    np.Quantity,
@@ -51,8 +54,11 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 		DateUpdated: now,
 	}
 
-	if err := c.store.Create(ctx, dbPrd); err != nil {
-		return Product{}, fmt.Errorf("create: %w", err)
+	var errDB error
+	dbPrd, errDB = db.Create(ctx, c.db, dbPrd)
+
+	if errDB != nil {
+		return Product{}, fmt.Errorf("create: %w", errDB)
 	}
 
 	return toProduct(dbPrd), nil
@@ -69,7 +75,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 		return fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd, err := c.store.QueryByID(ctx, productID)
+	dbPrd, err := db.QueryByID(ctx, c.db, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
@@ -88,7 +94,8 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 	}
 	dbPrd.DateUpdated = now
 
-	if err := c.store.Update(ctx, dbPrd); err != nil {
+	_, err = db.Update(ctx, c.db, dbPrd)
+	if err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -101,7 +108,7 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 		return ErrInvalidID
 	}
 
-	if err := c.store.Delete(ctx, productID); err != nil {
+	if err := db.Delete(ctx, c.db, productID); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -110,7 +117,7 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 
 // Query gets all Products from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
-	dbPrds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	dbPrds, err := db.Query(ctx, c.db, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -124,7 +131,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 		return Product{}, ErrInvalidID
 	}
 
-	dbPrd, err := c.store.QueryByID(ctx, productID)
+	dbPrd, err := db.QueryByID(ctx, c.db, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Product{}, ErrNotFound
@@ -141,7 +148,7 @@ func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, erro
 		return nil, ErrInvalidID
 	}
 
-	dbPrds, err := c.store.QueryByUserID(ctx, userID)
+	dbPrds, err := db.QueryByUserID(ctx, c.db, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

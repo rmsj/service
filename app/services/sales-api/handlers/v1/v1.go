@@ -5,22 +5,23 @@ package v1
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/app/services/sales-api/handlers/v1/productgrp"
+	"github.com/rmsj/service/app/services/sales-api/handlers/v1/usergrp"
+	"github.com/rmsj/service/business/core/product"
+	"github.com/rmsj/service/business/core/user"
+	"github.com/rmsj/service/business/web/auth"
+	"github.com/rmsj/service/business/web/v1/mid"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Log  *zap.SugaredLogger
 	Auth *auth.Auth
-	DB   *sqlx.DB
+	DB   *gorm.DB
 }
 
 // Routes binds all the version 1 routes.

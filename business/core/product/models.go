@@ -1,10 +1,10 @@
 package product
 
 import (
+	"fmt"
 	"time"
-	"unsafe"
 
-	"github.com/ardanlabs/service/business/core/product/db"
+	"github.com/rmsj/service/business/core/product/db"
 )
 
 // Product represents an individual product.
@@ -43,8 +43,21 @@ type UpdateProduct struct {
 // =============================================================================
 
 func toProduct(dbPrd db.Product) Product {
-	pu := (*Product)(unsafe.Pointer(&dbPrd))
-	return *pu
+	//pu := (*Product)(unsafe.Pointer(&dbPrd))
+
+	fmt.Println("PRODUCT ", dbPrd)
+	pu2 := Product{
+		ID:          dbPrd.ProductID,
+		Name:        dbPrd.Name,
+		Cost:        dbPrd.Cost,
+		Quantity:    dbPrd.Quantity,
+		Sold:        dbPrd.Sold,
+		Revenue:     dbPrd.Revenue,
+		UserID:      dbPrd.UserID,
+		DateCreated: dbPrd.DateCreated,
+		DateUpdated: dbPrd.DateUpdated,
+	}
+	return pu2
 }
 
 func toProductSlice(dbPrds []db.Product) []Product {

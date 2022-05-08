@@ -7,12 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/dbschema"
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/rmsj/service/business/core/user"
+	"github.com/rmsj/service/business/data/dbschema"
+	"github.com/rmsj/service/business/data/dbtest"
+	"github.com/rmsj/service/business/web/auth"
+	"github.com/rmsj/service/foundation/docker"
 )
 
 var c *docker.Container
@@ -24,12 +25,13 @@ func TestMain(m *testing.M) {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("TEST USER")
 	defer dbtest.StopDB(c)
 
 	m.Run()
 }
 
-func Test_User(t *testing.T) {
+func TestBUser(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
@@ -61,7 +63,7 @@ func Test_User(t *testing.T) {
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID", dbtest.Success, testID)
 
 			if diff := cmp.Diff(usr, saved); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same user. Diff:\n%s", dbtest.Failed, testID, diff)

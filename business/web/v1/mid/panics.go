@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/ardanlabs/service/business/web/metrics"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/business/web/metrics"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is

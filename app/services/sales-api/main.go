@@ -13,11 +13,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/foundation/keystore"
-	"github.com/ardanlabs/service/foundation/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/zipkin"
@@ -26,6 +21,12 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
+
+	"github.com/rmsj/service/app/services/sales-api/handlers"
+	"github.com/rmsj/service/business/sys/database"
+	"github.com/rmsj/service/business/web/auth"
+	"github.com/rmsj/service/foundation/keystore"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 /*
@@ -167,7 +168,7 @@ func run(log *zap.SugaredLogger) error {
 	}
 	defer func() {
 		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
-		db.Close()
+		database.Close(db)
 	}()
 
 	// =========================================================================

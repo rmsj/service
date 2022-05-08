@@ -1,8 +1,8 @@
 # Ultimate Service
 
-[![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/service)](https://goreportcard.com/report/github.com/ardanlabs/service)
-[![go.mod Go version](https://img.shields.io/github/go-mod/go-version/ardanlabs/service)](https://github.com/ardanlabs/service)
+[![CircleCI](https://circleci.com/gh/rmsj/service.svg?style=svg)](https://circleci.com/gh/rmsj/service)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rmsj/service)](https://goreportcard.com/report/github.com/rmsj/service)
+[![go.mod Go version](https://img.shields.io/github/go-mod/go-version/rmsj/service)](https://github.com/rmsj/service)
 
 Copyright 2018, 2019, 2020, 2021, 2022, Ardan Labs  
 info@ardanlabs.com
@@ -13,7 +13,7 @@ This class teaches how to build production-level services in Go leveraging the p
 
 Learn more about the project:
 
-[Wiki](https://github.com/ardanlabs/service/wiki) | [Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
+[Wiki](https://github.com/rmsj/service/wiki) | [Course Outline](https://github.com/rmsj/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
 
 ## Licensing
 
@@ -39,15 +39,15 @@ William Kennedy
 ArdanLabs (www.ardanlabs.com)  
 bill@ardanlabs.com  
 
-* [Purchase Video](https://github.com/ardanlabs/service#purchase-video)
-* [Experience](https://github.com/ardanlabs/service#our-experience)
-* [Teacher](https://github.com/ardanlabs/service#our-teacher)
-* [More About Go](https://github.com/ardanlabs/service#more-about-go)
-* [Minimal Qualified Student](https://github.com/ardanlabs/service#minimal-qualified-student)
-* [Important Reading](https://github.com/ardanlabs/service#important-reading)
-* [Before You Come To Class](https://github.com/ardanlabs/service#before-you-come-to-class)
-* [Starter Material](https://github.com/ardanlabs/service#starter-material)
-* [Get The Training Material](https://github.com/ardanlabs/service#go-get-the-training-material)
+* [Purchase Video](https://github.com/rmsj/service#purchase-video)
+* [Experience](https://github.com/rmsj/service#our-experience)
+* [Teacher](https://github.com/rmsj/service#our-teacher)
+* [More About Go](https://github.com/rmsj/service#more-about-go)
+* [Minimal Qualified Student](https://github.com/rmsj/service#minimal-qualified-student)
+* [Important Reading](https://github.com/rmsj/service#important-reading)
+* [Before You Come To Class](https://github.com/rmsj/service#before-you-come-to-class)
+* [Starter Material](https://github.com/rmsj/service#starter-material)
+* [Get The Training Material](https://github.com/rmsj/service#go-get-the-training-material)
 
 ## Purchase Video
 

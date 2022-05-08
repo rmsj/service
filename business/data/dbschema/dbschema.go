@@ -7,8 +7,9 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/darwin"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/business/sys/database"
 )
 
 var (
@@ -24,12 +25,17 @@ var (
 
 // Migrate attempts to bring the schema for db up to date with the migrations
 // defined in this package.
-func Migrate(ctx context.Context, db *sqlx.DB) error {
+func Migrate(ctx context.Context, db *gorm.DB) error {
 	if err := database.StatusCheck(ctx, db); err != nil {
 		return fmt.Errorf("status check database: %w", err)
 	}
 
-	driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	driver, err := darwin.NewGenericDriver(sqlDB, darwin.PostgresDialect{})
 	if err != nil {
 		return fmt.Errorf("construct darwin driver: %w", err)
 	}
@@ -40,40 +46,40 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 
 // Seed runs the set of seed-data queries against db. The queries are ran in a
 // transaction and rolled back if any fail.
-func Seed(ctx context.Context, db *sqlx.DB) error {
+func Seed(ctx context.Context, db *gorm.DB) error {
 	if err := database.StatusCheck(ctx, db); err != nil {
 		return fmt.Errorf("status check database: %w", err)
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
+	tx := db.Begin()
+	if tx.Error != nil {
+		return tx.Error
 	}
 
-	if _, err := tx.Exec(seedDoc); err != nil {
-		if err := tx.Rollback(); err != nil {
+	if err := tx.Exec(seedDoc).Error; err != nil {
+		if err := tx.Rollback().Error; err != nil {
 			return err
 		}
 		return err
 	}
 
-	return tx.Commit()
+	return tx.Commit().Error
 }
 
 // DeleteAll runs the set of Drop-table queries against db. The queries are ran in a
 // transaction and rolled back if any fail.
-func DeleteAll(db *sqlx.DB) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
+func DeleteAll(db *gorm.DB) error {
+	tx := db.Begin()
+	if tx.Error != nil {
+		return tx.Error
 	}
 
-	if _, err := tx.Exec(deleteDoc); err != nil {
-		if err := tx.Rollback(); err != nil {
+	if err := tx.Exec(deleteDoc).Error; err != nil {
+		if err := tx.Rollback().Error; err != nil {
 			return err
 		}
 		return err
 	}
 
-	return tx.Commit()
+	return tx.Commit().Error
 }

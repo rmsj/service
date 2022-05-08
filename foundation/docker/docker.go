@@ -6,8 +6,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net"
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -16,6 +16,7 @@ import (
 type Container struct {
 	ID   string
 	Host string // IP:Port
+	Port int    // IP:Port
 }
 
 // StartContainer starts the specified container for running tests.
@@ -36,10 +37,12 @@ func StartContainer(image string, port string, args ...string) (*Container, erro
 	if err != nil {
 		return nil, fmt.Errorf("could not extract ip/port: %w", err)
 	}
-
+	hostPortInt, _ := strconv.Atoi(hostPort)
 	c := Container{
-		ID:   id,
-		Host: net.JoinHostPort(hostIP, hostPort),
+		ID: id,
+		//Host: net.JoinHostPort(hostIP, hostPort),
+		Host: hostIP,
+		Port: hostPortInt,
 	}
 
 	fmt.Printf("Image:       %s\n", image)
@@ -82,6 +85,8 @@ func extractIPPort(id string, port string) (hostIP string, hostPort string, err 
 	if err := cmd.Run(); err != nil {
 		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
 	}
+
+	fmt.Println(id)
 
 	// When IPv6 is turned on with Docker.
 	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]

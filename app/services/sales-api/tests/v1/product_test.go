@@ -9,13 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/validate"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/rmsj/service/app/services/sales-api/handlers"
+	"github.com/rmsj/service/business/core/product"
+	"github.com/rmsj/service/business/data/dbtest"
+	"github.com/rmsj/service/business/sys/validate"
+	v1Web "github.com/rmsj/service/business/web/v1"
 )
 
 // ProductTests holds methods for each product subtest. This type allows

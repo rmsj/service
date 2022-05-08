@@ -8,34 +8,40 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
-	dbUser "github.com/ardanlabs/service/business/core/user/db"
-	"github.com/ardanlabs/service/business/data/dbschema"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gorm.io/gorm"
+
+	dbUser "github.com/rmsj/service/business/core/user/db"
+	"github.com/rmsj/service/business/data/dbschema"
+	"github.com/rmsj/service/business/sys/database"
+	"github.com/rmsj/service/business/web/auth"
+	"github.com/rmsj/service/foundation/docker"
+	"github.com/rmsj/service/foundation/keystore"
 )
 
 // Success and failure markers.
 const (
 	Success = "\u2713"
 	Failed  = "\u2717"
+	dbPort  = 5432
 )
 
 // StartDB starts a database instance.
 func StartDB() (*docker.Container, error) {
 	image := "postgres:14-alpine"
-	port := "5432"
+	port := strconv.Itoa(dbPort)
 	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
 
-	return docker.StartContainer(image, port, args...)
+	container, err := docker.StartContainer(image, port, args...)
+	// having trouble connecting to DB not yet ready
+	time.Sleep(time.Second * 5)
+	return container, err
 }
 
 // StopDB stops a running database instance.
@@ -46,16 +52,28 @@ func StopDB(c *docker.Container) {
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogger, *sqlx.DB, func()) {
+func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogger, *gorm.DB, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// log
+	var buf bytes.Buffer
+	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+	writer := bufio.NewWriter(&buf)
+	log := zap.New(
+		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel)).
+		Sugar()
+
+	// database
 	dbM, err := database.Open(database.Config{
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
+		Port:       c.Port,
 		Name:       "postgres",
 		DisableTLS: true,
+		Logger:     log,
+		Debug:      true,
 	})
 	if err != nil {
 		t.Fatalf("Opening database connection: %v", err)
@@ -69,10 +87,10 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 
 	t.Log("Database ready")
 
-	if _, err := dbM.ExecContext(context.Background(), "CREATE DATABASE "+dbName); err != nil {
+	if err := database.ExecDDL(context.Background(), dbM, log, "CREATE DATABASE "+dbName, nil); err != nil {
 		t.Fatalf("creating database %s: %v", dbName, err)
 	}
-	dbM.Close()
+	database.Close(dbM)
 
 	// =========================================================================
 
@@ -80,8 +98,11 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
+		Port:       c.Port,
 		Name:       dbName,
 		DisableTLS: true,
+		Logger:     log,
+		Debug:      true,
 	})
 	if err != nil {
 		t.Fatalf("Opening database connection: %v", err)
@@ -101,18 +122,11 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 
 	t.Log("Ready for testing ...")
 
-	var buf bytes.Buffer
-	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-	writer := bufio.NewWriter(&buf)
-	log := zap.New(
-		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel)).
-		Sugar()
-
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
 		t.Helper()
-		db.Close()
+		database.Close(db)
 
 		log.Sync()
 
@@ -127,7 +141,7 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 
 // Test owns state for running and shutting down tests.
 type Test struct {
-	DB       *sqlx.DB
+	DB       *gorm.DB
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
 	Teardown func()
@@ -167,15 +181,14 @@ func NewIntegration(t *testing.T, c *docker.Container, dbName string) *Test {
 func (test *Test) Token(email, pass string) string {
 	test.t.Log("Generating token for test ...")
 
-	store := dbUser.NewStore(test.Log, test.DB)
-	dbUsr, err := store.QueryByEmail(context.Background(), email)
+	dbUsr, err := dbUser.QueryByEmail(context.Background(), test.DB, email)
 	if err != nil {
 		return ""
 	}
 
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   dbUsr.ID,
+			Subject:   dbUsr.UserID,
 			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),

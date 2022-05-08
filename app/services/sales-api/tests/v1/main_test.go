@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
+	"github.com/rmsj/service/business/data/dbtest"
+	"github.com/rmsj/service/foundation/docker"
 )
 
 var c *docker.Container
@@ -17,6 +17,7 @@ func TestMain(m *testing.M) {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("TEST MAIN")
 	defer dbtest.StopDB(c)
 
 	m.Run()

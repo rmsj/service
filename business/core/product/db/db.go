@@ -3,193 +3,82 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
+	"github.com/lib/pq"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/business/sys/database"
 )
-
-// Store manages the set of APIs for user access.
-type Store struct {
-	log          *zap.SugaredLogger
-	tr           database.Transactor
-	db           sqlx.ExtContext
-	isWithinTran bool
-}
-
-// NewStore constructs a data for api access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
-	return Store{
-		log: log,
-		tr:  db,
-		db:  db,
-	}
-}
-
-// WithinTran runs passed function and do commit/rollback at the end.
-func (s Store) WithinTran(ctx context.Context, fn func(sqlx.ExtContext) error) error {
-	if s.isWithinTran {
-		fn(s.db)
-	}
-	return database.WithinTran(ctx, s.log, s.tr, fn)
-}
-
-// Tran return new Store with transaction in it.
-func (s Store) Tran(tx sqlx.ExtContext) Store {
-	return Store{
-		log:          s.log,
-		tr:           s.tr,
-		db:           tx,
-		isWithinTran: true,
-	}
-}
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (s Store) Create(ctx context.Context, prd Product) error {
-	const q = `
-	INSERT INTO products
-		(product_id, user_id, name, cost, quantity, date_created, date_updated)
-	VALUES
-		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
-
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, prd); err != nil {
-		return fmt.Errorf("inserting product: %w", err)
+func Create(ctx context.Context, db *gorm.DB, prd Product) (Product, error) {
+	if err := db.WithContext(ctx).Create(&prd).Error; err != nil {
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == database.UniqueViolation {
+			return prd, database.ErrDBDuplicatedEntry
+		}
+		return prd, fmt.Errorf("inserting user: %w", err)
 	}
 
-	return nil
+	return prd, nil
 }
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (s Store) Update(ctx context.Context, prd Product) error {
-	const q = `
-	UPDATE
-		products
-	SET
-		"name" = :name,
-		"cost" = :cost,
-		"quantity" = :quantity,
-		"date_updated" = :date_updated
-	WHERE
-		product_id = :product_id`
-
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, prd); err != nil {
-		return fmt.Errorf("updating product productID[%s]: %w", prd.ID, err)
+func Update(ctx context.Context, db *gorm.DB, prd Product) (Product, error) {
+	if err := db.WithContext(ctx).Save(&prd).Error; err != nil {
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == database.UniqueViolation {
+			return prd, database.ErrDBDuplicatedEntry
+		}
+		return prd, fmt.Errorf("updating productID[%s]: %w", prd.ProductID, err)
 	}
 
-	return nil
+	return prd, nil
 }
 
 // Delete removes the product identified by a given ID.
-func (s Store) Delete(ctx context.Context, productID string) error {
-	data := struct {
-		ProductID string `db:"product_id"`
-	}{
-		ProductID: productID,
-	}
-
-	const q = `
-	DELETE FROM
-		products
-	WHERE
-		product_id = :product_id`
-
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting product productID[%s]: %w", productID, err)
+func Delete(ctx context.Context, db *gorm.DB, productID string) error {
+	var prd Product
+	if err := db.WithContext(ctx).Where("product_id = ?", productID).Delete(&prd).Error; err != nil {
+		return fmt.Errorf("deleting productID[%s]: %w", productID, err)
 	}
 
 	return nil
 }
 
 // Query gets all Products from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
-	data := struct {
-		Offset      int `db:"offset"`
-		RowsPerPage int `db:"rows_per_page"`
-	}{
-		Offset:      (pageNumber - 1) * rowsPerPage,
-		RowsPerPage: rowsPerPage,
-	}
-
-	const q = `
-	SELECT
-		p.*,
-		COALESCE(SUM(s.quantity) ,0) AS sold,
-		COALESCE(SUM(s.paid), 0) AS revenue
-	FROM
-		products AS p
-	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id
-	GROUP BY
-		p.product_id
-	ORDER BY
-		user_id
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
-
+func Query(ctx context.Context, db *gorm.DB, pageNumber int, rowsPerPage int) ([]Product, error) {
+	offset := (pageNumber - 1) * rowsPerPage
 	var prds []Product
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &prds); err != nil {
-		return nil, fmt.Errorf("selecting products: %w", err)
+	if err := db.WithContext(ctx).Limit(rowsPerPage).Offset(offset).Find(&prds).Error; err != nil {
+		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 
 	return prds, nil
 }
 
 // QueryByID finds the product identified by a given ID.
-func (s Store) QueryByID(ctx context.Context, productID string) (Product, error) {
-	data := struct {
-		ProductID string `db:"product_id"`
-	}{
-		ProductID: productID,
-	}
-
-	const q = `
-	SELECT
-		p.*,
-		COALESCE(SUM(s.quantity), 0) AS sold,
-		COALESCE(SUM(s.paid), 0) AS revenue
-	FROM
-		products AS p
-	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id
-	WHERE
-		p.product_id = :product_id
-	GROUP BY
-		p.product_id`
-
+func QueryByID(ctx context.Context, db *gorm.DB, productID string) (Product, error) {
 	var prd Product
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &prd); err != nil {
-		return Product{}, fmt.Errorf("selecting product productID[%q]: %w", productID, err)
+	sql := `product_id = ?`
+	if err := db.WithContext(ctx).Where(sql, productID).First(&prd).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return Product{}, database.ErrDBNotFound
+		}
+		return Product{}, fmt.Errorf("selecting by id[%q]: %w", productID, err)
 	}
 
 	return prd, nil
 }
 
 // QueryByUserID finds the product identified by a given User ID.
-func (s Store) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
-	data := struct {
-		UserID string `db:"user_id"`
-	}{
-		UserID: userID,
-	}
-
-	const q = `
-	SELECT
-		p.*,
-		COALESCE(SUM(s.quantity), 0) AS sold,
-		COALESCE(SUM(s.paid), 0) AS revenue
-	FROM
-		products AS p
-	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id
-	WHERE
-		p.user_id = :user_id
-	GROUP BY
-		p.product_id`
-
+func QueryByUserID(ctx context.Context, db *gorm.DB, userID string) ([]Product, error) {
 	var prds []Product
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &prds); err != nil {
+	if err := db.WithContext(ctx).Find(&prds).Error; err != nil {
 		return nil, fmt.Errorf("selecting products userID[%s]: %w", userID, err)
 	}
 

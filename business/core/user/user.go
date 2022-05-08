@@ -8,15 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"unsafe"
 
-	"github.com/ardanlabs/service/business/core/user/db"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/business/core/user/db"
+	"github.com/rmsj/service/business/sys/database"
+	"github.com/rmsj/service/business/sys/validate"
+	"github.com/rmsj/service/business/web/auth"
 )
 
 // Set of error variables for CRUD operations.
@@ -30,13 +32,15 @@ var (
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	store db.Store
+	log *zap.SugaredLogger
+	db  *gorm.DB
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(l *zap.SugaredLogger, d *gorm.DB) Core {
 	return Core{
-		store: db.NewStore(log, sqlxDB),
+		log: l,
+		db:  d,
 	}
 }
 
@@ -52,7 +56,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 	}
 
 	dbUsr := db.User{
-		ID:           validate.GenerateID(),
+		UserID:       validate.GenerateID(),
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
@@ -61,18 +65,22 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		DateUpdated:  now,
 	}
 
-	// This provides an example of how to execute a transaction if required.
-	tran := func(tx sqlx.ExtContext) error {
-		if err := c.store.Tran(tx).Create(ctx, dbUsr); err != nil {
-			if errors.Is(err, database.ErrDBDuplicatedEntry) {
+	err = database.Transaction(ctx, c.db, c.log, func(tx *gorm.DB) error {
+		var errTx error
+		dbUsr, errTx = db.Create(ctx, tx, dbUsr)
+
+		if errTx != nil {
+			if errors.Is(errTx, database.ErrDBDuplicatedEntry) {
 				return fmt.Errorf("create: %w", ErrUniqueEmail)
 			}
-			return fmt.Errorf("create: %w", err)
-		}
-		return nil
-	}
 
-	if err := c.store.WithinTran(ctx, tran); err != nil {
+			return fmt.Errorf("create: %w", errTx)
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return User{}, fmt.Errorf("tran: %w", err)
 	}
 
@@ -89,7 +97,7 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 		return fmt.Errorf("validating data: %w", err)
 	}
 
-	dbUsr, err := c.store.QueryByID(ctx, userID)
+	dbUsr, err := db.QueryByID(ctx, c.db, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
@@ -108,6 +116,8 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	}
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
+		//theHash := (*pq.ByteaArray)(unsafe.Pointer(&pw))
+
 		if err != nil {
 			return fmt.Errorf("generating password hash: %w", err)
 		}
@@ -115,7 +125,8 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	}
 	dbUsr.DateUpdated = now
 
-	if err := c.store.Update(ctx, dbUsr); err != nil {
+	_, err = db.Update(ctx, c.db, dbUsr)
+	if err != nil {
 		if errors.Is(err, database.ErrDBDuplicatedEntry) {
 			return fmt.Errorf("updating user userID[%s]: %w", userID, ErrUniqueEmail)
 		}
@@ -131,8 +142,8 @@ func (c Core) Delete(ctx context.Context, userID string) error {
 		return ErrInvalidID
 	}
 
-	if err := c.store.Delete(ctx, userID); err != nil {
-		return fmt.Errorf("delete: %w", err)
+	if err := db.Delete(ctx, c.db, userID); err != nil {
+		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
 	}
 
 	return nil
@@ -140,9 +151,10 @@ func (c Core) Delete(ctx context.Context, userID string) error {
 
 // Query retrieves a list of existing users from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
-	dbUsers, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	dbUsers, err := db.Query(ctx, c.db, pageNumber, rowsPerPage)
+
 	if err != nil {
-		return nil, fmt.Errorf("query: %w", err)
+		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 
 	return toUserSlice(dbUsers), nil
@@ -154,12 +166,12 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 		return User{}, ErrInvalidID
 	}
 
-	dbUsr, err := c.store.QueryByID(ctx, userID)
+	dbUsr, err := db.QueryByID(ctx, c.db, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return User{}, ErrNotFound
 		}
-		return User{}, fmt.Errorf("query: %w", err)
+		return User{}, fmt.Errorf("QueryByID: %w", err)
 	}
 
 	return toUser(dbUsr), nil
@@ -173,12 +185,12 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 		return User{}, ErrInvalidEmail
 	}
 
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+	dbUsr, err := db.QueryByEmail(ctx, c.db, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return User{}, ErrNotFound
 		}
-		return User{}, fmt.Errorf("query: %w", err)
+		return User{}, fmt.Errorf("QueryByEmail: %w", err)
 	}
 
 	return toUser(dbUsr), nil
@@ -188,7 +200,7 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+	dbUsr, err := db.QueryByEmail(ctx, c.db, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return auth.Claims{}, ErrNotFound
@@ -198,7 +210,8 @@ func (c Core) Authenticate(ctx context.Context, now time.Time, email, password s
 
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
-	if err := bcrypt.CompareHashAndPassword(dbUsr.PasswordHash, []byte(password)); err != nil {
+	pwh := (*[]byte)(unsafe.Pointer(&dbUsr.PasswordHash))
+	if err := bcrypt.CompareHashAndPassword(*pwh, []byte(password)); err != nil {
 		return auth.Claims{}, ErrAuthenticationFailure
 	}
 
@@ -206,7 +219,7 @@ func (c Core) Authenticate(ctx context.Context, now time.Time, email, password s
 	// and generate their token.
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   dbUsr.ID,
+			Subject:   dbUsr.UserID,
 			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),

@@ -9,14 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/lib/pq"
+
+	"github.com/rmsj/service/app/services/sales-api/handlers"
+	"github.com/rmsj/service/business/core/user"
+	"github.com/rmsj/service/business/data/dbtest"
+	"github.com/rmsj/service/business/sys/validate"
+	"github.com/rmsj/service/business/web/auth"
+	v1Web "github.com/rmsj/service/business/web/v1"
 )
 
 // UserTests holds methods for each user subtest. This type allows passing
@@ -411,7 +413,7 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 	nu := user.NewUser{
 		Name:            "Bill Kennedy",
 		Email:           "bill@ardanlabs.com",
-		Roles:           []string{auth.RoleAdmin},
+		Roles:           pq.StringArray{auth.RoleAdmin},
 		Password:        "gophers",
 		PasswordConfirm: "gophers",
 	}
@@ -449,7 +451,7 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 			exp := got
 			exp.Name = "Bill Kennedy"
 			exp.Email = "bill@ardanlabs.com"
-			exp.Roles = []string{auth.RoleAdmin}
+			exp.Roles = pq.StringArray{auth.RoleAdmin}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)
@@ -546,7 +548,7 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 			exp.ID = id
 			exp.Name = "Bill Kennedy"
 			exp.Email = "bill@ardanlabs.com"
-			exp.Roles = []string{auth.RoleAdmin}
+			exp.Roles = pq.StringArray{auth.RoleAdmin}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)

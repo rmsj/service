@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/business/web/auth"
+	v1Web "github.com/rmsj/service/business/web/v1"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Authenticate validates a JWT from the `Authorization` header.

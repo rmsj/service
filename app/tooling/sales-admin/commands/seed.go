@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbschema"
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/rmsj/service/business/data/dbschema"
+	"github.com/rmsj/service/business/sys/database"
 )
 
 // Seed loads test data into the database.
@@ -15,7 +15,7 @@ func Seed(cfg database.Config) error {
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
-	defer db.Close()
+	defer database.Close(db)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

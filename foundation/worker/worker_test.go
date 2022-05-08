@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/worker"
+	"github.com/rmsj/service/foundation/worker"
 )
 
 // Success and failure markers.

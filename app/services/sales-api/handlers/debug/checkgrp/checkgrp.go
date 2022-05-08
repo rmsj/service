@@ -8,16 +8,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/business/sys/database"
 )
 
 // Handlers manages the set of check endpoints.
 type Handlers struct {
 	Build string
 	Log   *zap.SugaredLogger
-	DB    *sqlx.DB
+	DB    *gorm.DB
 }
 
 // Readiness checks if the database is ready and if not will return a 500 status.

@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/business/core/product"
+	"github.com/rmsj/service/business/web/auth"
+	v1Web "github.com/rmsj/service/business/web/v1"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Handlers manages the set of product endpoints.

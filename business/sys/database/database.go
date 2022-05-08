@@ -3,21 +3,26 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
-	"net/url"
-	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // Calls init function.
 	"go.uber.org/zap"
+	glogger "gorm.io/gorm/logger"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
+	"github.com/rmsj/service/foundation/web"
 )
 
 // lib/pq errorCodeNames
 // https://github.com/lib/pq/blob/master/error.go#L178
-const uniqueViolation = "23505"
+const UniqueViolation = "23505"
+
+const timezone = "utc"
 
 // Set of error variables for CRUD operations.
 var (
@@ -27,52 +32,99 @@ var (
 
 // Config is the required properties to use the database.
 type Config struct {
-	User         string
-	Password     string
-	Host         string
-	Name         string
-	MaxIdleConns int
-	MaxOpenConns int
-	DisableTLS   bool
+	User            string
+	Password        string
+	Host            string
+	Name            string
+	Port            int
+	MaxIdleConns    int
+	MaxOpenConns    int
+	MaxConnLifeTime int
+	DisableTLS      bool
+	Debug           bool
+	Logger          *zap.SugaredLogger
+}
+
+type DBModeler interface {
+	TableName() string
+}
+
+type Store struct {
+	db  *gorm.DB
+	log *zap.SugaredLogger
 }
 
 // Open knows how to open a database connection based on the configuration.
-func Open(cfg Config) (*sqlx.DB, error) {
+func Open(cfg Config) (*gorm.DB, error) {
+
 	sslMode := "require"
 	if cfg.DisableTLS {
 		sslMode = "disable"
 	}
 
-	q := make(url.Values)
-	q.Set("sslmode", sslMode)
-	q.Set("timezone", "utc")
-
-	u := url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword(cfg.User, cfg.Password),
-		Host:     cfg.Host,
-		Path:     cfg.Name,
-		RawQuery: q.Encode(),
+	// we need our own logger to be able to centralize everything with zap
+	myLogger := newLogger(cfg.Logger)
+	myLogger.SlowThreshold = 200 * time.Millisecond
+	myLogger.LogLevel = glogger.Warn
+	if cfg.Debug {
+		myLogger.LogLevel = glogger.Info
+	}
+	gormCfg := gorm.Config{
+		Logger: myLogger,
 	}
 
-	db, err := sqlx.Open("postgres", u.String())
+	//dsnStr := "host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=%s"
+	//dns := fmt.Sprintf(dsnStr, cfg.Host, cfg.User, cfg.Password, cfg.Name, cfg.Port, sslMode, timezone)
+	dsnStr := "host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=%s"
+	dns := fmt.Sprintf(dsnStr, cfg.Host, cfg.User, cfg.Password, cfg.Name, cfg.Port, sslMode, timezone)
+	db, err := gorm.Open(postgres.Open(dns), &gormCfg)
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxIdleConns(cfg.MaxIdleConns)
-	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB, err := db.DB()
+
+	if err != nil {
+		return nil, err
+	}
+
+	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+
+	// SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+
+	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	return db, nil
 }
 
+// Close closes connection with database
+func Close(db *gorm.DB) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	sqlDB.Close()
+	return nil
+}
+
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+func StatusCheck(ctx context.Context, db *gorm.DB) error {
+
+	// Get generic database object sql.DB to use its functions
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
 
 	// First check we can ping the database.
 	var pingError error
 	for attempts := 1; ; attempts++ {
-		pingError = db.Ping()
+
+		// Ping
+		pingError = sqlDB.Ping()
 		if pingError == nil {
 			break
 		}
@@ -91,73 +143,97 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	// round trip through the database.
 	const q = `SELECT true`
 	var tmp bool
-	return db.QueryRowContext(ctx, q).Scan(&tmp)
+	return db.Raw(q).Scan(&tmp).Error
 }
 
-// Transactor interface needed to begin transaction.
-type Transactor interface {
-	Beginx() (*sqlx.Tx, error)
-}
-
-// WithinTran runs passed function and do commit/rollback at the end.
-func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn func(sqlx.ExtContext) error) error {
+// Transaction runs passed function and do commit/rollback at the end.
+func Transaction(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, fn func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
 	traceID := web.GetTraceID(ctx)
 
 	// Begin the transaction.
 	log.Infow("begin tran", "traceid", traceID)
-	tx, err := db.Beginx()
-	if err != nil {
-		return fmt.Errorf("begin tran: %w", err)
-	}
 
-	// Mark to the defer function a rollback is required.
-	mustRollback := true
-
-	// Set up a defer function for rolling back the transaction. If
-	// mustRollback is true it means the call to fn failed, and we
-	// need to roll back the transaction.
-	defer func() {
-		if mustRollback {
-			log.Infow("rollback tran", "traceid", traceID)
-			if err := tx.Rollback(); err != nil {
-				log.Errorw("unable to rollback tran", "traceid", traceID, "ERROR", err)
-			}
-		}
-	}()
+	// any error will automatically rollback the transaction
+	err := db.Transaction(fn, opts...)
 
 	// Execute the code inside the transaction. If the function
 	// fails, return the error and the defer function will roll back.
-	if err := fn(tx); err != nil {
+	if err != nil {
 
 		// Checks if the error is of code 23505 (unique_violation).
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == UniqueViolation {
 			return ErrDBDuplicatedEntry
 		}
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
-	// Disarm the deferred rollback.
-	mustRollback = false
+	return nil
+}
 
-	// Commit the transaction.
-	log.Infow("commit tran", "traceid", traceID)
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit tran: %w", err)
+// ExecDDL is a helper function to execute a CUD operation with
+// logging and tracing.
+func ExecDDL(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, sql string, data any) error {
+
+	log.Infow("database.ExecSQL", "traceid", web.GetTraceID(ctx), "query", sql)
+
+	var dbErr error
+	if data != nil {
+		dbErr = db.Exec(sql, data).Error
+	} else {
+		dbErr = db.Exec(sql).Error
+	}
+
+	if dbErr != nil {
+		return dbErr
 	}
 
 	return nil
 }
 
-// NamedExecContext is a helper function to execute a CUD operation with
+// ExecSQL is a helper function to execute a CUD operation with
 // logging and tracing.
-func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
-	q := queryString(query, data)
-	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
+func ExecSQL(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, sql string, data any) error {
 
-	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
+	sqlStr := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		if data != nil {
+			return db.Exec(sql, data)
+		} else {
+			return db.Exec(sql)
+		}
+	})
+	log.Infow("database.ExecSQL", "traceid", web.GetTraceID(ctx), "query", sqlStr)
 
+	var dbErr error
+	if data != nil {
+		dbErr = db.Exec(sql, data).Error
+	} else {
+		dbErr = db.Exec(sql).Error
+	}
+
+	if dbErr != nil {
 		// Checks if the error is of code 23505 (unique_violation).
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+		if pqerr, ok := dbErr.(*pq.Error); ok && pqerr.Code == UniqueViolation {
+			return ErrDBDuplicatedEntry
+		}
+		return dbErr
+	}
+
+	return nil
+}
+
+// Create is a helper function to execute a CUD operation with
+// logging and tracing.
+func Create(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, model DBModeler) error {
+
+	sqlStr := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.WithContext(ctx).Create(&model)
+	})
+
+	log.Infow("database.Exec", "traceid", web.GetTraceID(ctx), "insert", sqlStr)
+
+	if err := db.WithContext(ctx).Create(&model).Error; err != nil {
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == UniqueViolation {
 			return ErrDBDuplicatedEntry
 		}
 		return err
@@ -166,76 +242,76 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	return nil
 }
 
-// NamedQuerySlice is a helper function for executing queries that return a
-// collection of data to be unmarshalled into a slice.
-func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
-	q := queryString(query, data)
-	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
+// Update is a helper function to execute a CUD operation with
+// logging and tracing.
+func Update(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, model DBModeler) error {
 
-	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
-	if err != nil {
+	sqlStr := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.WithContext(ctx).Save(&model)
+	})
+
+	log.Infow("database.Exec", "traceid", web.GetTraceID(ctx), "update", sqlStr)
+
+	if err := db.WithContext(ctx).Save(&model).Error; err != nil {
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == UniqueViolation {
+			return ErrDBDuplicatedEntry
+		}
 		return err
 	}
-	defer rows.Close()
-
-	var slice []T
-	for rows.Next() {
-		v := new(T)
-		if err := rows.StructScan(v); err != nil {
-			return err
-		}
-		slice = append(slice, *v)
-	}
-	*dest = slice
 
 	return nil
 }
 
-// NamedQueryStruct is a helper function for executing queries that return a
+// Delete is a helper function to execute a CUD operation with
+// logging and tracing.
+func Delete(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, model DBModeler) error {
+
+	sqlStr := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.WithContext(ctx).Delete(&model)
+	})
+
+	log.Infow("database.Exec", "traceid", web.GetTraceID(ctx), "query", sqlStr)
+
+	return db.WithContext(ctx).Save(&model).Error
+}
+
+// GetOne is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type.
-func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
-	q := queryString(query, data)
-	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
+func GetOne(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, dest DBModeler, query string, data ...any) error {
+	sqlStr := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.Where(query, data...).First(dest)
+	})
 
-	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
+	log.Infow("database.GetOne", "traceid", web.GetTraceID(ctx), "query", sqlStr)
+
+	err := db.Where(query, data...).First(dest).Error
 	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return ErrDBNotFound
-	}
-
-	if err := rows.StructScan(dest); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrDBNotFound
+		}
 		return err
 	}
 
 	return nil
 }
 
-// queryString provides a pretty print version of the query and parameters.
-func queryString(query string, args ...any) string {
-	query, params, err := sqlx.Named(query, args)
+// GetMany is a helper function for executing queries that return a
+// collection of data to be unmarshalled into a slice.
+func GetMany(ctx context.Context, db *gorm.DB, log *zap.SugaredLogger, dest any, query string, data ...any) error {
+
+	sqlStr := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.Where(query, data...).Find(dest)
+	})
+	log.Infow("database.GetMany", "traceid", web.GetTraceID(ctx), "query", sqlStr)
+
+	err := db.Where(query, data...).Find(&dest).Error
 	if err != nil {
-		return err.Error()
-	}
-
-	for _, param := range params {
-		var value string
-		switch v := param.(type) {
-		case string:
-			value = fmt.Sprintf("%q", v)
-		case []byte:
-			value = fmt.Sprintf("%q", string(v))
-		default:
-			value = fmt.Sprintf("%v", v)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrDBNotFound
 		}
-		query = strings.Replace(query, "?", value, 1)
+		return err
 	}
 
-	query = strings.ReplaceAll(query, "\t", "")
-	query = strings.ReplaceAll(query, "\n", " ")
-
-	return strings.Trim(query, " ")
+	return nil
 }
