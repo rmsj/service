@@ -3,8 +3,8 @@ package product_test
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/domain/productapp"
-	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/rmsj/service/app/domain/productapp"
+	"github.com/rmsj/service/business/domain/productbus"
 )
 
 func toAppProduct(prd productbus.Product) productapp.Product {

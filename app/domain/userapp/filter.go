@@ -5,10 +5,10 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/types/name"
 )
 
 type queryParams struct {

@@ -3,7 +3,7 @@ package product_test
 import (
 	"testing"
 
-	"github.com/ardanlabs/service/app/sdk/apitest"
+	"github.com/rmsj/service/app/sdk/apitest"
 )
 
 func Test_Product(t *testing.T) {

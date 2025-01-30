@@ -3,9 +3,9 @@ package checkapp
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.

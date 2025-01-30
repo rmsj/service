@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/domain/vproductbus"
 )
 
 // Product represents information about an individual product with

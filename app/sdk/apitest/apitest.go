@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
-	"github.com/ardanlabs/service/business/types/role"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/sdk/dbtest"
+	"github.com/rmsj/service/business/types/role"
 )
 
 // Test contains functions for executing an api test.

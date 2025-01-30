@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/app/sdk/mid"
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/types/money"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/quantity"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/app/sdk/mid"
+	"github.com/rmsj/service/business/domain/productbus"
+	"github.com/rmsj/service/business/types/money"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/quantity"
 )
 
 // Product represents information about an individual product.

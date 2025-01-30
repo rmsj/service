@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/domain/vproductbus"
-	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/types/name"
 )
 
 type queryParams struct {

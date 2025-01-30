@@ -4,14 +4,13 @@ package all
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/domain/authapp"
-	"github.com/ardanlabs/service/app/domain/checkapp"
-	"github.com/ardanlabs/service/app/sdk/mux"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/sdk/delegate"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/app/domain/authapp"
+	"github.com/rmsj/service/app/domain/checkapp"
+	"github.com/rmsj/service/app/sdk/mux"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/sdk/delegate"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Routes constructs the add value which provides the implementation of
@@ -27,8 +26,8 @@ func (add) Add(app *web.App, cfg mux.Config) {
 
 	// Construct the business domain packages we need here so we are using the
 	// sames instances for the different set of domain apis.
-	delegate := delegate.New(cfg.Log)
-	userBus := userbus.NewBusiness(cfg.Log, delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB), time.Minute))
+	dlg := delegate.New(cfg.Log)
+	userBus := userbus.NewBusiness(cfg.Log, dlg, userdb.NewStore(cfg.Log, cfg.DB, time.Minute))
 
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,

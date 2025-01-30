@@ -3,9 +3,9 @@ package unitest
 import (
 	"context"
 
-	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/homebus"
+	"github.com/rmsj/service/business/domain/productbus"
+	"github.com/rmsj/service/business/domain/userbus"
 )
 
 // User represents an app user specified for the test.

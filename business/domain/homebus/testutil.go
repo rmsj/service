@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/types/hometype"
 )
 
 // TestGenerateNewHomes is a helper method for testing.

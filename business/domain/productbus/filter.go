@@ -1,8 +1,8 @@
 package productbus
 
 import (
-	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/types/name"
 )
 
 // QueryFilter holds the available fields a query can be filtered on.

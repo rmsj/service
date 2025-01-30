@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/otel"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Errors handles errors coming out of the call chain.

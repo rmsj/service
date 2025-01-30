@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus"
 )
 
 func applyFilter(filter userbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {

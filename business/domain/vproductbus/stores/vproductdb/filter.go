@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/domain/vproductbus"
 )
 
 func (s *Store) applyFilter(filter vproductbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {

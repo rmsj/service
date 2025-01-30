@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/open-policy-agent/opa/v1/rego"
+
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // ErrForbidden is returned when a auth issue is identified.
@@ -63,7 +63,7 @@ func New(cfg Config) (*Auth, error) {
 	// user enabled check.
 	var userBus *userbus.Business
 	if cfg.DB != nil {
-		userBus = userbus.NewBusiness(cfg.Log, nil, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB), 10*time.Minute))
+		userBus = userbus.NewBusiness(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB, 10*time.Minute))
 	}
 
 	a := Auth{

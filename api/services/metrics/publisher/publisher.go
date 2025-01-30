@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // Set of possible publisher types.

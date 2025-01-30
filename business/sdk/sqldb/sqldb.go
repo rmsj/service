@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
 

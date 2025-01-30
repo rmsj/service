@@ -3,10 +3,10 @@ package authapp
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/app/sdk/mid"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/app/sdk/mid"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.

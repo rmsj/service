@@ -6,21 +6,24 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/sdk/sqldb/dbarray"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/sdk/sqldb/dbarray"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/role"
 )
 
 type user struct {
 	ID           uuid.UUID      `db:"user_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
+	Mobile       sql.NullString `db:"mobile"`
+	ProfileImage sql.NullString `db:"profile_image"`
 	Roles        dbarray.String `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
 	Department   sql.NullString `db:"department"`
 	Enabled      bool           `db:"enabled"`
+	RefreshToken sql.NullString `db:"refresh_token"`
 	DateCreated  time.Time      `db:"date_created"`
 	DateUpdated  time.Time      `db:"date_updated"`
 }

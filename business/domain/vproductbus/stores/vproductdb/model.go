@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/vproductbus"
-	"github.com/ardanlabs/service/business/types/money"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/types/money"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/quantity"
 )
 
 type product struct {

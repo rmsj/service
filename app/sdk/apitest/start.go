@@ -4,12 +4,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	authbuild "github.com/ardanlabs/service/api/services/auth/build/all"
-	salesbuild "github.com/ardanlabs/service/api/services/sales/build/all"
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/app/sdk/authclient"
-	"github.com/ardanlabs/service/app/sdk/mux"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
+	authbuild "github.com/rmsj/service/api/services/auth/build/all"
+	salesbuild "github.com/rmsj/service/api/services/sales/build/all"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/app/sdk/authclient"
+	"github.com/rmsj/service/app/sdk/mux"
+	"github.com/rmsj/service/business/sdk/dbtest"
 )
 
 // New initialized the system to run a test.

@@ -3,9 +3,9 @@ package user_test
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/types/role"
+	"github.com/rmsj/service/app/domain/userapp"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/types/role"
 )
 
 func toAppUser(bus userbus.User) userapp.User {

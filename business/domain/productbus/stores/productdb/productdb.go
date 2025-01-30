@@ -7,13 +7,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/sdk/order"
-	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/rmsj/service/business/domain/productbus"
+	"github.com/rmsj/service/business/sdk/order"
+	"github.com/rmsj/service/business/sdk/page"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // Store manages the set of APIs for product database access.
@@ -142,7 +142,7 @@ func (s *Store) Count(ctx context.Context, filter productbus.QueryFilter) (int, 
 
 	const q = `
 	SELECT
-		count(1)
+		COUNT(1)
 	FROM
 		products`
 

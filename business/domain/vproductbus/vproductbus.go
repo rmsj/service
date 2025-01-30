@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sdk/order"
-	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/foundation/otel"
+	"github.com/rmsj/service/business/sdk/order"
+	"github.com/rmsj/service/business/sdk/page"
+	"github.com/rmsj/service/foundation/otel"
 )
 
 // Storer interface declares the behavior this package needs to persist and

@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/types/role"
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/business/types/role"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/web"
 )
 
 type app struct {

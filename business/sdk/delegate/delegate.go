@@ -5,7 +5,7 @@ package delegate
 import (
 	"context"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // These types are just for documentation so we know what keys go

@@ -3,8 +3,8 @@ package homebus
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/types/hometype"
 )
 
 // Address represents an individual address.

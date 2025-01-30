@@ -3,9 +3,9 @@ package oauthapp
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Config contains all the configuration for the auth app.

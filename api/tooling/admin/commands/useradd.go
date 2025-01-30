@@ -6,12 +6,12 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/role"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/role"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // UserAdd adds new users into the database.
@@ -30,7 +30,7 @@ func UserAdd(log *logger.Logger, cfg sqldb.Config, nme string, email string, pas
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	userBus := userbus.NewBusiness(log, nil, userdb.NewStore(log, db))
+	userBus := userbus.NewBusiness(log, nil, userdb.NewStore(log, db, 10*time.Second))
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {

@@ -1,7 +1,7 @@
 package homeapp
 
 import (
-	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/rmsj/service/business/domain/homebus"
 )
 
 var orderByFields = map[string]string{

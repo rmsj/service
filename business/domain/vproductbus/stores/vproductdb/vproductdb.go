@@ -6,12 +6,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/domain/vproductbus"
-	"github.com/ardanlabs/service/business/sdk/order"
-	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
+	"github.com/rmsj/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/sdk/order"
+	"github.com/rmsj/service/business/sdk/page"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // Store manages the set of APIs for product view database access.
@@ -78,7 +78,7 @@ func (s *Store) Count(ctx context.Context, filter vproductbus.QueryFilter) (int,
 
 	const q = `
 	SELECT
-		count(1)
+		COUNT(1)
 	FROM
 		view_products`
 

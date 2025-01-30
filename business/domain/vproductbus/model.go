@@ -3,10 +3,10 @@ package vproductbus
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/types/money"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/types/money"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/quantity"
 )
 
 // Product represents an individual product with extended information.

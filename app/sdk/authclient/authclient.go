@@ -13,9 +13,9 @@ import (
 	"path"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
 

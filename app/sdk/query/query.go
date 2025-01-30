@@ -4,7 +4,7 @@ package query
 import (
 	"encoding/json"
 
-	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/rmsj/service/business/sdk/page"
 )
 
 // Result is the data model used when returning a query result.

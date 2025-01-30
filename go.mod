@@ -1,6 +1,8 @@
-module github.com/ardanlabs/service
+module github.com/rmsj/service
 
 go 1.23.0
+
+toolchain go1.23.5
 
 require (
 	github.com/ardanlabs/conf/v3 v3.2.0

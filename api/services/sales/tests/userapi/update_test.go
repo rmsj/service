@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/app/sdk/apitest"
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/google/go-cmp/cmp"
+	"github.com/rmsj/service/app/domain/userapp"
+	"github.com/rmsj/service/app/sdk/apitest"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/business/sdk/dbtest"
 )
 
 func update200(sd apitest.SeedData) []apitest.Table {

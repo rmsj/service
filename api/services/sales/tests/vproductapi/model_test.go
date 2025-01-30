@@ -3,9 +3,9 @@ package vproduct_test
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/domain/vproductapp"
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/rmsj/service/app/domain/vproductapp"
+	"github.com/rmsj/service/business/domain/productbus"
+	"github.com/rmsj/service/business/domain/userbus"
 )
 
 func toAppVProduct(usr userbus.User, prd productbus.Product) vproductapp.Product {

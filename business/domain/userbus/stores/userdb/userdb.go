@@ -7,27 +7,36 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"time"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/sdk/order"
-	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/viccon/sturdyc"
+
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/sdk/order"
+	"github.com/rmsj/service/business/sdk/page"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // Store manages the set of APIs for user database access.
 type Store struct {
-	log *logger.Logger
-	db  sqlx.ExtContext
+	log   *logger.Logger
+	db    sqlx.ExtContext
+	cache *sturdyc.Client[userbus.User]
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
+func NewStore(log *logger.Logger, db *sqlx.DB, ttl time.Duration) *Store {
+	const capacity = 10000
+	const numShards = 10
+	const evictionPercentage = 10
+
 	return &Store{
-		log: log,
-		db:  db,
+		log:   log,
+		db:    db,
+		cache: sturdyc.New[userbus.User](capacity, numShards, 10*time.Second, evictionPercentage),
 	}
 }
 
@@ -40,8 +49,9 @@ func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
 	}
 
 	store := Store{
-		log: s.log,
-		db:  ec,
+		log:   s.log,
+		db:    ec,
+		cache: s.cache,
 	}
 
 	return &store, nil
@@ -51,9 +61,9 @@ func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
 func (s *Store) Create(ctx context.Context, usr userbus.User) error {
 	const q = `
 	INSERT INTO users
-		(user_id, name, email, password_hash, roles, department, enabled, date_created, date_updated)
+		(user_id, name, email, mobile, profile_image, password_hash, roles, department, enabled, date_created, date_updated)
 	VALUES
-		(:user_id, :name, :email, :password_hash, :roles, :department, :enabled, :date_created, :date_updated)`
+		(:user_id, :name, :email, :mobile, :profile_image, :password_hash, :roles, :department, :enabled, :date_created, :date_updated)`
 
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		if errors.Is(err, sqldb.ErrDBDuplicatedEntry) {
@@ -61,6 +71,8 @@ func (s *Store) Create(ctx context.Context, usr userbus.User) error {
 		}
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
+
+	s.writeCache(usr)
 
 	return nil
 }
@@ -73,6 +85,8 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 	SET 
 		"name" = :name,
 		"email" = :email,
+		"mobile" = :mobile,
+		"profile_image" = :profile_image,
 		"roles" = :roles,
 		"password_hash" = :password_hash,
 		"department" = :department,
@@ -87,6 +101,7 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 		}
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
+	s.writeCache(usr)
 
 	return nil
 }
@@ -102,6 +117,7 @@ func (s *Store) Delete(ctx context.Context, usr userbus.User) error {
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
+	s.deleteCache(usr)
 
 	return nil
 }
@@ -144,7 +160,7 @@ func (s *Store) Count(ctx context.Context, filter userbus.QueryFilter) (int, err
 
 	const q = `
 	SELECT
-		count(1)
+		COUNT(1)
 	FROM
 		users`
 
@@ -163,6 +179,11 @@ func (s *Store) Count(ctx context.Context, filter userbus.QueryFilter) (int, err
 
 // QueryByID gets the specified user from the database.
 func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, error) {
+	cached, ok := s.readCache(userID.String())
+	if ok {
+		return cached, nil
+	}
+
 	data := struct {
 		ID string `db:"user_id"`
 	}{
@@ -184,12 +205,22 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, 
 		}
 		return userbus.User{}, fmt.Errorf("db: %w", err)
 	}
+	bus, err := toBusUser(dbUsr)
+	if err != nil {
+		return userbus.User{}, err
+	}
+	s.writeCache(bus)
 
-	return toBusUser(dbUsr)
+	return bus, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
 func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.User, error) {
+	cached, ok := s.readCache(email.Address)
+	if ok {
+		return cached, nil
+	}
+
 	data := struct {
 		Email string `db:"email"`
 	}{
@@ -211,6 +242,10 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.U
 		}
 		return userbus.User{}, fmt.Errorf("db: %w", err)
 	}
+	bus, err := toBusUser(dbUsr)
+	if err != nil {
+		return userbus.User{}, err
+	}
 
-	return toBusUser(dbUsr)
+	return bus, nil
 }

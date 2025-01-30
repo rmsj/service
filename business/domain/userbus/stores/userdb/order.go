@@ -3,8 +3,8 @@ package userdb
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/sdk/order"
 )
 
 var orderByFields = map[string]string{

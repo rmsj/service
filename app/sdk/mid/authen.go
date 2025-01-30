@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/app/sdk/authclient"
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/types/role"
-	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/app/sdk/authclient"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/types/role"
+	"github.com/rmsj/service/foundation/web"
 )
 
 // Authenticate is a middleware function that integrates with an authentication client

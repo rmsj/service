@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/business/types/role"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/business/types/role"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 func Test_Auth(t *testing.T) {

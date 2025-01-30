@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/app/sdk/apitest"
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
-	"github.com/ardanlabs/service/business/types/role"
+	"github.com/rmsj/service/app/sdk/apitest"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/business/domain/homebus"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/sdk/dbtest"
+	"github.com/rmsj/service/business/types/role"
 )
 
 func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {

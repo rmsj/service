@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/sdk/page"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // Users retrieves all users from the database.
@@ -25,7 +25,7 @@ func Users(log *logger.Logger, cfg sqldb.Config, pageNumber string, rowsPerPage 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	userBus := userbus.NewBusiness(log, nil, userdb.NewStore(log, db))
+	userBus := userbus.NewBusiness(log, nil, userdb.NewStore(log, db, 10*time.Second))
 
 	page, err := page.Parse(pageNumber, rowsPerPage)
 	if err != nil {

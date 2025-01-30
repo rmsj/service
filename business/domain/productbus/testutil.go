@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/ardanlabs/service/business/types/money"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/types/money"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/quantity"
 )
 
 // TestGenerateNewProducts is a helper method for testing.

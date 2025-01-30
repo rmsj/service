@@ -1,9 +1,9 @@
 package dbtest
 
 import (
-	"github.com/ardanlabs/service/business/types/money"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/quantity"
+	"github.com/rmsj/service/business/types/money"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/quantity"
 )
 
 // StringPointer is a helper to get a *string from a string. It is in the tests

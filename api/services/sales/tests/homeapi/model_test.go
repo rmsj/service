@@ -3,8 +3,8 @@ package home_test
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/domain/homeapp"
-	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/rmsj/service/app/domain/homeapp"
+	"github.com/rmsj/service/business/domain/homebus"
 )
 
 func toAppHome(hme homebus.Home) homeapp.Home {

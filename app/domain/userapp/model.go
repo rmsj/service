@@ -6,10 +6,10 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/types/name"
-	"github.com/ardanlabs/service/business/types/role"
+	"github.com/rmsj/service/app/sdk/errs"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/types/name"
+	"github.com/rmsj/service/business/types/role"
 )
 
 // User represents information about an individual user.

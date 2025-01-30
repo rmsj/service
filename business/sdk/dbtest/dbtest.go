@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/sdk/migrate"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/jmoiron/sqlx"
+	"github.com/rmsj/service/business/sdk/migrate"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/foundation/docker"
+	"github.com/rmsj/service/foundation/logger"
+	"github.com/rmsj/service/foundation/otel"
 )
 
 // Database owns state for running and shutting down tests.

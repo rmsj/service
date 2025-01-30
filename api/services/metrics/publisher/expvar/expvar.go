@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // Expvar provide our basic publishing.

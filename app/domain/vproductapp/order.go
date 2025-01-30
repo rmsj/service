@@ -1,7 +1,7 @@
 package vproductapp
 
 import (
-	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/domain/vproductbus"
 )
 
 var orderByFields = map[string]string{

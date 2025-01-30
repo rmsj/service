@@ -1,7 +1,7 @@
 package productapp
 
 import (
-	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/rmsj/service/business/domain/productbus"
 )
 
 var orderByFields = map[string]string{

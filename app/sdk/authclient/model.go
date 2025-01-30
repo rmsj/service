@@ -3,8 +3,8 @@ package authclient
 import (
 	"encoding/json"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/app/sdk/auth"
 )
 
 // Authorize defines the information required to perform an authorization.

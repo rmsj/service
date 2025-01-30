@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/sdk/apitest"
-	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/google/go-cmp/cmp"
+	"github.com/rmsj/service/app/sdk/apitest"
+	"github.com/rmsj/service/app/sdk/errs"
 )
 
 func delete200(sd apitest.SeedData) []apitest.Table {

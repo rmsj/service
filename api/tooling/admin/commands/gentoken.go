@@ -6,15 +6,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/sdk/sqldb"
-	"github.com/ardanlabs/service/business/types/role"
-	"github.com/ardanlabs/service/foundation/keystore"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/app/sdk/auth"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/sdk/sqldb"
+	"github.com/rmsj/service/business/types/role"
+	"github.com/rmsj/service/foundation/keystore"
+	"github.com/rmsj/service/foundation/logger"
 )
 
 // GenToken generates a JWT for the specified user.
@@ -33,7 +33,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	userBus := userbus.NewBusiness(log, nil, userdb.NewStore(log, db))
+	userBus := userbus.NewBusiness(log, nil, userdb.NewStore(log, db, 10*time.Second))
 
 	usr, err := userBus.QueryByID(ctx, userID)
 	if err != nil {

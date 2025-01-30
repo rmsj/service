@@ -3,8 +3,8 @@ package homebus
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
+	"github.com/rmsj/service/business/types/hometype"
 )
 
 // QueryFilter holds the available fields a query can be filtered on.

@@ -3,10 +3,10 @@ package tran_test
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/domain/tranapp"
-	"github.com/ardanlabs/service/app/sdk/apitest"
-	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/google/go-cmp/cmp"
+	"github.com/rmsj/service/app/domain/tranapp"
+	"github.com/rmsj/service/app/sdk/apitest"
+	"github.com/rmsj/service/app/sdk/errs"
 )
 
 func create200(sd apitest.SeedData) []apitest.Table {
