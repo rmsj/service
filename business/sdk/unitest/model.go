@@ -3,6 +3,7 @@ package unitest
 import (
 	"context"
 
+	"github.com/rmsj/service/business/domain/authbus"
 	"github.com/rmsj/service/business/domain/homebus"
 	"github.com/rmsj/service/business/domain/productbus"
 	"github.com/rmsj/service/business/domain/userbus"
@@ -17,8 +18,9 @@ type User struct {
 
 // SeedData represents data that was seeded for the test.
 type SeedData struct {
-	Users  []User
-	Admins []User
+	Users           []User
+	Admins          []User
+	PassResetTokens []authbus.PasswordResetToken
 }
 
 // Table represent fields needed for running an unit test.

@@ -39,12 +39,14 @@ type NewUser struct {
 
 // UpdateUser contains information needed to update a user.
 type UpdateUser struct {
-	Name         *name.Name
-	Email        *mail.Address
-	Mobile       *string
-	ProfileImage *string
-	Roles        []role.Role
-	Department   *name.Null
-	Password     *string
-	Enabled      *bool
+	Name            *name.Name
+	Email           *mail.Address
+	Mobile          *string
+	ProfileImage    *string
+	Roles           []role.Role
+	Department      *name.Null
+	RefreshToken    *string
+	Password        *string
+	PasswordConfirm *string
+	Enabled         *bool
 }

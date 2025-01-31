@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/rmsj/service/business/sdk/delegate"
 	"github.com/rmsj/service/business/sdk/order"
 	"github.com/rmsj/service/business/sdk/page"
 	"github.com/rmsj/service/business/sdk/sqldb"
 	"github.com/rmsj/service/foundation/logger"
 	"github.com/rmsj/service/foundation/otel"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Set of error variables for CRUD operations.
@@ -36,6 +37,7 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
+	QueryByRefreshToken(ctx context.Context, refreshToken string) (User, error)
 }
 
 // Business manages the set of APIs for user access.
@@ -204,6 +206,20 @@ func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, 
 	user, err := b.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
+	}
+
+	return user, nil
+}
+
+// QueryByRefreshToken finds the user by the specified refresh token
+func (b *Business) QueryByRefreshToken(ctx context.Context, refreshToken string) (User, error) {
+	ctx, span := otel.AddSpan(ctx, "business.userbus.querybyrefreshtoken")
+	defer span.End()
+
+	user, err := b.storer.QueryByRefreshToken(ctx, refreshToken)
+	if err != nil {
+		b.log.Error(ctx, "business.userbus.querybyrefreshtoken", "error", err)
+		return User{}, fmt.Errorf("query: refreshToken[%s]: %w", refreshToken, err)
 	}
 
 	return user, nil

@@ -17,6 +17,7 @@ import (
 
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/sdk/id"
 	"github.com/rmsj/service/foundation/logger"
 )
 
@@ -43,6 +44,8 @@ type Config struct {
 	DB        *sqlx.DB
 	KeyLookup KeyLookup
 	Issuer    string
+	APIKey    string
+	ActiveKID string
 }
 
 // Auth is used to authenticate clients. It can generate a token for a
@@ -54,6 +57,8 @@ type Auth struct {
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
+	apiKey    string
+	activeKID string
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -73,6 +78,8 @@ func New(cfg Config) (*Auth, error) {
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
+		apiKey:    cfg.APIKey,
+		activeKID: cfg.ActiveKID,
 	}
 
 	return &a, nil
@@ -83,27 +90,42 @@ func (a *Auth) Issuer() string {
 	return a.issuer
 }
 
+// APIKey provides the configured API Key used to authenticate certain endpoints.
+func (a *Auth) APIKey() string {
+	return a.apiKey
+}
+
+// ActiveKID provides the configured active key ID, if not present in the path.
+func (a *Auth) ActiveKID() string {
+	return a.activeKID
+}
+
 // GenerateToken generates a signed JWT token string representing the user Claims.
-func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
+func (a *Auth) GenerateToken(kid string, claims Claims) (string, string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
 	token.Header["kid"] = kid
 
 	privateKeyPEM, err := a.keyLookup.PrivateKey(kid)
 	if err != nil {
-		return "", fmt.Errorf("private key: %w", err)
+		return "", "", fmt.Errorf("private key: %w", err)
 	}
 
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKeyPEM))
 	if err != nil {
-		return "", fmt.Errorf("parsing private pem: %w", err)
+		return "", "", fmt.Errorf("parsing private pem: %w", err)
 	}
 
 	str, err := token.SignedString(privateKey)
 	if err != nil {
-		return "", fmt.Errorf("signing token: %w", err)
+		return "", "", fmt.Errorf("signing token: %w", err)
 	}
 
-	return str, nil
+	refreshToken, err := id.NewRandomString(64)
+	if err != nil {
+		return "", "", fmt.Errorf("refresh token: %w", err)
+	}
+
+	return str, refreshToken, nil
 }
 
 // Authenticate processes the token to validate the sender's token is valid.

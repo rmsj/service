@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+
 	"github.com/rmsj/service/api/services/auth/build/all"
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/app/sdk/debug"
@@ -76,6 +77,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			KeysFolder string `conf:"default:zarf/keys/"`
 			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 			Issuer     string `conf:"default:service project"`
+			APIKey     string `conf:"default:api_key"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`
@@ -175,6 +177,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:        db,
 		KeyLookup: ks,
 		Issuer:    cfg.Auth.Issuer,
+		APIKey:    cfg.Auth.APIKey,
+		ActiveKID: cfg.Auth.ActiveKID,
 	}
 
 	ath, err := auth.New(authCfg)

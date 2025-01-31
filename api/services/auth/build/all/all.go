@@ -7,6 +7,8 @@ import (
 	"github.com/rmsj/service/app/domain/authapp"
 	"github.com/rmsj/service/app/domain/checkapp"
 	"github.com/rmsj/service/app/sdk/mux"
+	"github.com/rmsj/service/business/domain/authbus"
+	"github.com/rmsj/service/business/domain/authbus/stores/authdb"
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
 	"github.com/rmsj/service/business/sdk/delegate"
@@ -27,6 +29,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	// Construct the business domain packages we need here so we are using the
 	// sames instances for the different set of domain apis.
 	dlg := delegate.New(cfg.Log)
+	authBus := authbus.NewBusiness(cfg.Log, authdb.NewStore(cfg.Log, cfg.DB))
 	userBus := userbus.NewBusiness(cfg.Log, dlg, userdb.NewStore(cfg.Log, cfg.DB, time.Minute))
 
 	checkapp.Routes(app, checkapp.Config{
@@ -36,6 +39,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	authapp.Routes(app, authapp.Config{
+		AuthBus: authBus,
 		UserBus: userBus,
 		Auth:    cfg.Auth,
 	})

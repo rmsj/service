@@ -4,8 +4,10 @@ package mid
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/business/domain/homebus"
 	"github.com/rmsj/service/business/domain/productbus"
@@ -26,6 +28,7 @@ func isError(e web.Encoder) error {
 // =============================================================================
 
 type ctxKey int
+type ctxStringKey string
 
 const (
 	claimKey ctxKey = iota + 1
@@ -34,6 +37,7 @@ const (
 	productKey
 	homeKey
 	trKey
+	timeKey ctxStringKey = "time"
 )
 
 func setClaims(ctx context.Context, claims auth.Claims) context.Context {
@@ -117,4 +121,17 @@ func GetTran(ctx context.Context) (sqldb.CommitRollbacker, error) {
 	}
 
 	return v, nil
+}
+
+func SetTime(ctx context.Context, now time.Time) context.Context {
+	return context.WithValue(ctx, timeKey, now)
+}
+
+// GetTime returns the start time of the current request from the context.
+func GetTime(ctx context.Context) time.Time {
+	v, ok := ctx.Value(timeKey).(time.Time)
+	if !ok {
+		return time.Now()
+	}
+	return v
 }

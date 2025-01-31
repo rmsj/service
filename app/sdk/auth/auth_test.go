@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/business/types/role"
 	"github.com/rmsj/service/foundation/logger"
@@ -47,9 +48,12 @@ func test1(ath *auth.Auth) func(t *testing.T) {
 			Roles: []string{role.Admin.String()},
 		}
 
-		token, err := ath.GenerateToken(kid, claims)
+		token, refresh, err := ath.GenerateToken(kid, claims)
 		if err != nil {
 			t.Fatalf("Should be able to generate a JWT : %s", err)
+		}
+		if refresh == "" {
+			t.Fatal("Should be able to generate a refresh token")
 		}
 
 		parsedClaims, err := ath.Authenticate(context.Background(), "Bearer "+token)
@@ -90,7 +94,7 @@ func test2(ath *auth.Auth) func(t *testing.T) {
 			Roles: []string{role.User.String()},
 		}
 
-		token, err := ath.GenerateToken(kid, claims)
+		token, _, err := ath.GenerateToken(kid, claims)
 		if err != nil {
 			t.Fatalf("Should be able to generate a JWT : %v", err)
 		}
@@ -138,7 +142,7 @@ func test3(ath *auth.Auth) func(t *testing.T) {
 			Roles: []string{role.User.String()},
 		}
 
-		token, err := ath.GenerateToken(kid, claims)
+		token, _, err := ath.GenerateToken(kid, claims)
 		if err != nil {
 			t.Fatalf("Should be able to generate a JWT : %s", err)
 		}
@@ -172,7 +176,7 @@ func test4(ath *auth.Auth) func(t *testing.T) {
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
-		token, err := ath.GenerateToken(kid, claims)
+		token, _, err := ath.GenerateToken(kid, claims)
 		if err != nil {
 			t.Fatalf("Should be able to generate a JWT : %s", err)
 		}
@@ -204,7 +208,7 @@ func test5(ath *auth.Auth) func(t *testing.T) {
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
-		token, err := ath.GenerateToken(kid, claims)
+		token, _, err := ath.GenerateToken(kid, claims)
 		if err != nil {
 			t.Fatalf("Should be able to generate a JWT : %s", err)
 		}
@@ -236,7 +240,7 @@ func test6(ath *auth.Auth) func(t *testing.T) {
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
-		token, err := ath.GenerateToken(kid, claims)
+		token, _, err := ath.GenerateToken(kid, claims)
 		if err != nil {
 			t.Fatalf("Should be able to generate a JWT : %s", err)
 		}

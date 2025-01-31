@@ -18,10 +18,12 @@ func New(t *testing.T, testName string) *Test {
 
 	// -------------------------------------------------------------------------
 
-	auth, err := auth.New(auth.Config{
+	ath, err := auth.New(auth.Config{
 		Log:       db.Log,
 		DB:        db.DB,
 		KeyLookup: &KeyStore{},
+		APIKey:    "api_key",
+		ActiveKID: "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +35,7 @@ func New(t *testing.T, testName string) *Test {
 		Log: db.Log,
 		DB:  db.DB,
 		AuthConfig: mux.AuthConfig{
-			Auth: auth,
+			Auth: ath,
 		},
 	}, authbuild.Routes()))
 
@@ -41,7 +43,7 @@ func New(t *testing.T, testName string) *Test {
 
 	// -------------------------------------------------------------------------
 
-	mux := mux.WebAPI(mux.Config{
+	tMux := mux.WebAPI(mux.Config{
 		Log: db.Log,
 		DB:  db.DB,
 		SalesConfig: mux.SalesConfig{
@@ -51,7 +53,7 @@ func New(t *testing.T, testName string) *Test {
 
 	return &Test{
 		DB:   db,
-		Auth: auth,
-		mux:  mux,
+		Auth: ath,
+		mux:  tMux,
 	}
 }

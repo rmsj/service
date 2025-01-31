@@ -258,6 +258,10 @@ github.com/prometheus/procfs/internal/util
 # github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 ## explicit
 github.com/rcrowley/go-metrics
+# github.com/rmsj/fake v0.0.5
+## explicit; go 1.18
+github.com/rmsj/fake
+github.com/rmsj/fake/internal/data
 # github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus

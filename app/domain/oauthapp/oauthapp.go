@@ -11,6 +11,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/app/sdk/errs"
 	"github.com/rmsj/service/business/types/role"
@@ -67,7 +68,7 @@ func (a *app) authCallback(ctx context.Context, r *http.Request) web.Encoder {
 		Roles: []string{role.Admin.String()},
 	}
 
-	token, err := a.auth.GenerateToken(a.tokenKey, clms)
+	token, _, err := a.auth.GenerateToken(a.tokenKey, clms)
 	if err != nil {
 		return errs.New(errs.Internal, err)
 	}

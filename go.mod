@@ -19,6 +19,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/markbates/goth v1.80.0
 	github.com/open-policy-agent/opa v1.0.0
+	github.com/rmsj/fake v0.0.5
 	github.com/viccon/sturdyc v1.1.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0
 	go.opentelemetry.io/otel v1.34.0

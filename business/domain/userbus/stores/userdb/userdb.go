@@ -246,6 +246,45 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.U
 	if err != nil {
 		return userbus.User{}, err
 	}
+	s.writeCache(bus)
+
+	return bus, nil
+}
+
+// QueryByRefreshToken gets the specified user from the database by refresh token.
+func (s *Store) QueryByRefreshToken(ctx context.Context, refreshToken string) (userbus.User, error) {
+	cached, ok := s.readCache(refreshToken)
+	if ok {
+		return cached, nil
+	}
+
+	data := struct {
+		Email string `db:"refresh_token"`
+	}{
+		Email: refreshToken,
+	}
+
+	const q = `
+	SELECT
+        *
+	FROM
+		users
+	WHERE
+		refresh_token = :refresh_token`
+
+	var dbUsr user
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+		if errors.Is(err, sqldb.ErrDBNotFound) {
+			return userbus.User{}, fmt.Errorf("db: %w", userbus.ErrNotFound)
+		}
+		return userbus.User{}, fmt.Errorf("db: %w", err)
+	}
+
+	bus, err := toBusUser(dbUsr)
+	if err != nil {
+		return userbus.User{}, err
+	}
+	s.writeCache(bus)
 
 	return bus, nil
 }

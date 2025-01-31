@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/sdk/dbtest"
@@ -93,7 +94,7 @@ func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
 		Roles: role.ParseToString(dbUsr.Roles),
 	}
 
-	token, err := ath.GenerateToken(kid, claims)
+	token, _, err := ath.GenerateToken(kid, claims)
 	if err != nil {
 		return ""
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
@@ -93,7 +94,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := ath.GenerateToken(kid, claims)
+	token, _, err := ath.GenerateToken(kid, claims)
 	if err != nil {
 		return fmt.Errorf("generating token: %w", err)
 	}
