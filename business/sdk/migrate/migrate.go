@@ -12,6 +12,7 @@ import (
 	"github.com/ardanlabs/darwin/v3/dialects/postgres"
 	"github.com/ardanlabs/darwin/v3/drivers/generic"
 	"github.com/jmoiron/sqlx"
+
 	"github.com/rmsj/service/business/sdk/sqldb"
 )
 
@@ -36,6 +37,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	d := darwin.New(driver, darwin.ParseMigrations(migrateDoc))
+	fmt.Printf("migrations %+v", d)
 	return d.Migrate()
 }
 

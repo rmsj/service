@@ -42,8 +42,8 @@ func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, order
 		name,
 		cost,
 		quantity,
-		date_created,
-		date_updated,
+		created_at,
+		updated_at,
 		user_name
 	FROM
 		view_products`

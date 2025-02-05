@@ -61,9 +61,9 @@ func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
 func (s *Store) Create(ctx context.Context, usr userbus.User) error {
 	const q = `
 	INSERT INTO users
-		(user_id, name, email, mobile, profile_image, password_hash, roles, department, enabled, date_created, date_updated)
+		(user_id, name, email, mobile, profile_image, password_hash, roles, department, enabled, created_at, updated_at)
 	VALUES
-		(:user_id, :name, :email, :mobile, :profile_image, :password_hash, :roles, :department, :enabled, :date_created, :date_updated)`
+		(:user_id, :name, :email, :mobile, :profile_image, :password_hash, :roles, :department, :enabled, :created_at, :updated_at)`
 
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		if errors.Is(err, sqldb.ErrDBDuplicatedEntry) {
@@ -91,7 +91,7 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 		"password_hash" = :password_hash,
 		"department" = :department,
 		"enabled" = :enabled,
-		"date_updated" = :date_updated
+		"updated_at" = :updated_at
 	WHERE
 		user_id = :user_id`
 
@@ -131,7 +131,7 @@ func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy o
 
 	const q = `
 	SELECT
-		user_id, name, email, password_hash, roles, department, enabled, date_created, date_updated
+		user_id, name, email, password_hash, roles, department, enabled, created_at, updated_at
 	FROM
 		users`
 
@@ -192,7 +192,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, 
 
 	const q = `
 	SELECT
-        user_id, name, email, password_hash, roles, department, enabled, date_created, date_updated
+        user_id, name, email, password_hash, roles, department, enabled, created_at, updated_at
 	FROM
 		users
 	WHERE 
@@ -229,7 +229,7 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.U
 
 	const q = `
 	SELECT
-        user_id, name, email, password_hash, roles, department, enabled, date_created, date_updated
+        user_id, name, email, password_hash, roles, department, enabled, created_at, updated_at
 	FROM
 		users
 	WHERE

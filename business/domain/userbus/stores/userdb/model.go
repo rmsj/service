@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"net/mail"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/rmsj/service/business/domain/userbus"
-	"github.com/rmsj/service/business/sdk/sqldb/dbarray"
 	"github.com/rmsj/service/business/types/name"
 	"github.com/rmsj/service/business/types/role"
 )
@@ -19,13 +20,13 @@ type user struct {
 	Email        string         `db:"email"`
 	Mobile       sql.NullString `db:"mobile"`
 	ProfileImage sql.NullString `db:"profile_image"`
-	Roles        dbarray.String `db:"roles"`
+	Roles        string         `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
 	Department   sql.NullString `db:"department"`
 	Enabled      bool           `db:"enabled"`
 	RefreshToken sql.NullString `db:"refresh_token"`
-	DateCreated  time.Time      `db:"date_created"`
-	DateUpdated  time.Time      `db:"date_updated"`
+	DateCreated  time.Time      `db:"created_at"`
+	DateUpdated  time.Time      `db:"updated_at"`
 }
 
 func toDBUser(bus userbus.User) user {
@@ -33,7 +34,7 @@ func toDBUser(bus userbus.User) user {
 		ID:           bus.ID,
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        role.ParseToString(bus.Roles),
+		Roles:        strings.Join(role.ParseToString(bus.Roles), ","),
 		PasswordHash: bus.PasswordHash,
 		Department: sql.NullString{
 			String: bus.Department.String(),
@@ -50,7 +51,7 @@ func toBusUser(db user) (userbus.User, error) {
 		Address: db.Email,
 	}
 
-	roles, err := role.ParseMany(db.Roles)
+	roles, err := role.ParseMany(strings.Split(db.Roles, ","))
 	if err != nil {
 		return userbus.User{}, fmt.Errorf("parse: %w", err)
 	}

@@ -51,9 +51,9 @@ func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (productbus.Storer, error) 
 func (s *Store) Create(ctx context.Context, prd productbus.Product) error {
 	const q = `
 	INSERT INTO products
-		(product_id, user_id, name, cost, quantity, date_created, date_updated)
+		(product_id, user_id, name, cost, quantity, created_at, updated_at)
 	VALUES
-		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
+		(:product_id, :user_id, :name, :cost, :quantity, :created_at, :updated_at)`
 
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -72,7 +72,7 @@ func (s *Store) Update(ctx context.Context, prd productbus.Product) error {
 		"name" = :name,
 		"cost" = :cost,
 		"quantity" = :quantity,
-		"date_updated" = :date_updated
+		"updated_at" = :updated_at
 	WHERE
 		product_id = :product_id`
 
@@ -113,7 +113,7 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 
 	const q = `
 	SELECT
-	    product_id, user_id, name, cost, quantity, date_created, date_updated
+	    product_id, user_id, name, cost, quantity, created_at, updated_at
 	FROM
 		products`
 
@@ -171,7 +171,7 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (productbus.
 
 	const q = `
 	SELECT
-	    product_id, user_id, name, cost, quantity, date_created, date_updated
+	    product_id, user_id, name, cost, quantity, created_at, updated_at
 	FROM
 		products
 	WHERE
@@ -198,7 +198,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]productb
 
 	const q = `
 	SELECT
-	    product_id, user_id, name, cost, quantity, date_created, date_updated
+	    product_id, user_id, name, cost, quantity, created_at, updated_at
 	FROM
 		products
 	WHERE
