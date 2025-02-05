@@ -83,15 +83,15 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 	UPDATE
 		users
 	SET 
-		"name" = :name,
-		"email" = :email,
-		"mobile" = :mobile,
-		"profile_image" = :profile_image,
-		"roles" = :roles,
-		"password_hash" = :password_hash,
-		"department" = :department,
-		"enabled" = :enabled,
-		"updated_at" = :updated_at
+		name = :name,
+		email = :email,
+		mobile = :mobile,
+		profile_image = :profile_image,
+		roles = :roles,
+		password_hash = :password_hash,
+		department = :department,
+		enabled = :enabled,
+		updated_at = :updated_at
 	WHERE
 		user_id = :user_id`
 
@@ -144,7 +144,7 @@ func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy o
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" LIMIT :rows_per_page OFFSET :offset")
 
 	var dbUsrs []user
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
@@ -158,11 +158,7 @@ func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy o
 func (s *Store) Count(ctx context.Context, filter userbus.QueryFilter) (int, error) {
 	data := map[string]any{}
 
-	const q = `
-	SELECT
-		COUNT(1)
-	FROM
-		users`
+	const q = "SELECT COUNT(user_id) AS `count` FROM users"
 
 	buf := bytes.NewBufferString(q)
 	applyFilter(filter, data, buf)

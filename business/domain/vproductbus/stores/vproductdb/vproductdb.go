@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+
 	"github.com/rmsj/service/business/domain/vproductbus"
 	"github.com/rmsj/service/business/sdk/order"
 	"github.com/rmsj/service/business/sdk/page"
@@ -57,7 +58,7 @@ func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, order
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" LIMIT :rows_per_page OFFSET :offset")
 
 	var dnPrd []product
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dnPrd); err != nil {
@@ -76,11 +77,7 @@ func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, order
 func (s *Store) Count(ctx context.Context, filter vproductbus.QueryFilter) (int, error) {
 	data := map[string]any{}
 
-	const q = `
-	SELECT
-		COUNT(1)
-	FROM
-		view_products`
+	const q = "SELECT COUNT(product_id) AS `count` FROM view_products"
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)

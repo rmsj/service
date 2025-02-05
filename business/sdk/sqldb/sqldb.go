@@ -55,6 +55,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	}
 	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetConnMaxLifetime(time.Minute * 3)
 
 	return db, nil
 }

@@ -135,8 +135,8 @@ export default {
     },
     userRoles() {
       return [
-        { title: "Admin", value: "ADMIN" },
-        { title: "User", value: "USER" },
+        { title: "Admin", value: "admin" },
+        { title: "User", value: "user" },
       ];
     },
   },

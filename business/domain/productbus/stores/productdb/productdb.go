@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+
 	"github.com/rmsj/service/business/domain/productbus"
 	"github.com/rmsj/service/business/sdk/order"
 	"github.com/rmsj/service/business/sdk/page"
@@ -69,10 +70,10 @@ func (s *Store) Update(ctx context.Context, prd productbus.Product) error {
 	UPDATE
 		products
 	SET
-		"name" = :name,
-		"cost" = :cost,
-		"quantity" = :quantity,
-		"updated_at" = :updated_at
+		name = :name,
+		cost = :cost,
+		quantity = :quantity,
+		updated_at = :updated_at
 	WHERE
 		product_id = :product_id`
 
@@ -126,7 +127,7 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" LIMIT :rows_per_page OFFSET :offset")
 
 	var dbPrds []product
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbPrds); err != nil {
@@ -140,11 +141,7 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 func (s *Store) Count(ctx context.Context, filter productbus.QueryFilter) (int, error) {
 	data := map[string]any{}
 
-	const q = `
-	SELECT
-		COUNT(1)
-	FROM
-		products`
+	const q = "SELECT COUNT(product_id) AS `count` FROM products"
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)

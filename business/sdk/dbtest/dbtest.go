@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/rmsj/service/business/sdk/migrate"
@@ -29,7 +30,7 @@ type Database struct {
 // to handle testing. The database is migrated to the current version and
 // a connection pool is provided with business domain packages.
 func New(t *testing.T, testName string) *Database {
-	image := "mysql:8.4.0"
+	image := "mysql:9.2.0"
 	name := "servicetest"
 	port := "3306"
 	dockerArgs := []string{

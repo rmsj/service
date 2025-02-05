@@ -428,9 +428,9 @@ lint:
 vuln-check:
 	govulncheck ./...
 
-test: test-only lint vuln-check
+test: test-only lint vuln-check test-down
 
-test-race: test-r lint vuln-check
+test-race: test-r lint vuln-check test-down
 
 # ==============================================================================
 # Hitting endpoints
@@ -516,7 +516,7 @@ curl-create:
 	curl -il -X POST \
 	-H "Authorization: Bearer ${TOKEN}" \
 	-H 'Content-Type: application/json' \
-	-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"ITO","password":"123","passwordConfirm":"123"}' \
+	-d '{"name":"bill","email":"b@gmail.com","roles":["admin"],"department":"ITO","password":"123","passwordConfirm":"123"}' \
 	http://localhost:3000/v1/users
 
 # ==============================================================================

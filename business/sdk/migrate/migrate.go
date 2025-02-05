@@ -7,9 +7,10 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/ardanlabs/darwin/v3"
-	"github.com/ardanlabs/darwin/v3/dialects/postgres"
+	"github.com/ardanlabs/darwin/v3/dialects/mysql"
 	"github.com/ardanlabs/darwin/v3/drivers/generic"
 	"github.com/jmoiron/sqlx"
 
@@ -31,13 +32,12 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 		return fmt.Errorf("status check database: %w", err)
 	}
 
-	driver, err := generic.New(db.DB, postgres.Dialect{})
+	driver, err := generic.New(db.DB, mysql.Dialect{})
 	if err != nil {
 		return fmt.Errorf("construct darwin driver: %w", err)
 	}
 
 	d := darwin.New(driver, darwin.ParseMigrations(migrateDoc))
-	fmt.Printf("migrations %+v", d)
 	return d.Migrate()
 }
 
@@ -64,8 +64,14 @@ func Seed(ctx context.Context, db *sqlx.DB) (err error) {
 		}
 	}()
 
-	if _, err := tx.Exec(seedDoc); err != nil {
-		return fmt.Errorf("exec: %w", err)
+	seedStatements := strings.Split(seedDoc, ";")
+	for _, seed := range seedStatements {
+		if len(seed) == 0 {
+			continue
+		}
+		if _, err := tx.Exec(seed); err != nil {
+			return fmt.Errorf("exec: %w", err)
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
