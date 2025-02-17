@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/rmsj/service/app/sdk/auth"
-	"github.com/rmsj/service/business/domain/homebus"
 	"github.com/rmsj/service/business/domain/productbus"
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/sdk/sqldb"
@@ -35,7 +34,6 @@ const (
 	userIDKey
 	userKey
 	productKey
-	homeKey
 	trKey
 	timeKey ctxStringKey = "time"
 )
@@ -90,20 +88,6 @@ func GetProduct(ctx context.Context) (productbus.Product, error) {
 	v, ok := ctx.Value(productKey).(productbus.Product)
 	if !ok {
 		return productbus.Product{}, errors.New("product not found in context")
-	}
-
-	return v, nil
-}
-
-func setHome(ctx context.Context, hme homebus.Home) context.Context {
-	return context.WithValue(ctx, homeKey, hme)
-}
-
-// GetHome returns the home from the context.
-func GetHome(ctx context.Context) (homebus.Home, error) {
-	v, ok := ctx.Value(homeKey).(homebus.Home)
-	if !ok {
-		return homebus.Home{}, errors.New("home not found in context")
 	}
 
 	return v, nil

@@ -6,23 +6,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/rmsj/service/foundation/logger"
 	"github.com/rmsj/service/foundation/otel"
-	"go.opentelemetry.io/otel/attribute"
-)
-
-// lib/pq errorCodeNames
-// https://github.com/lib/pq/blob/master/error.go#L178
-const (
-	uniqueViolation = "23505"
-	undefinedTable  = "42P01"
 )
 
 // Set of error variables for CRUD operations.
@@ -38,7 +30,6 @@ type Config struct {
 	Password     string
 	Host         string
 	Name         string
-	Schema       string
 	MaxIdleConns int
 	MaxOpenConns int
 	DisableTLS   bool
@@ -46,32 +37,25 @@ type Config struct {
 
 // Open knows how to open a database connection based on the configuration.
 func Open(cfg Config) (*sqlx.DB, error) {
-	sslMode := "require"
-	if cfg.DisableTLS {
-		sslMode = "disable"
+
+	dbCfg := mysql.Config{
+		User:                 cfg.User,
+		Passwd:               cfg.Password,
+		Net:                  "tcp",
+		Addr:                 cfg.Host,
+		DBName:               cfg.Name,
+		CheckConnLiveness:    true,
+		ParseTime:            true,
+		AllowNativePasswords: true,
 	}
 
-	q := make(url.Values)
-	q.Set("sslmode", sslMode)
-	q.Set("timezone", "utc")
-	if cfg.Schema != "" {
-		q.Set("search_path", cfg.Schema)
-	}
-
-	u := url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword(cfg.User, cfg.Password),
-		Host:     cfg.Host,
-		Path:     cfg.Name,
-		RawQuery: q.Encode(),
-	}
-
-	db, err := sqlx.Open("pgx", u.String())
+	db, err := sqlx.Open("mysql", dbCfg.FormatDSN())
 	if err != nil {
 		return nil, err
 	}
 	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetConnMaxLifetime(time.Minute * 3)
 
 	return db, nil
 }
@@ -83,7 +67,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	// If the user doesn't give us a deadline set 1 second.
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Second)
+		ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 	}
 
@@ -136,12 +120,10 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) {
-			switch pqerr.Code {
-			case undefinedTable:
-				return ErrUndefinedTable
-			case uniqueViolation:
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) {
+			switch mysqlErr.Number {
+			case 1062:
 				return ErrDBDuplicatedEntry
 			}
 		}
@@ -207,13 +189,14 @@ func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.Ext
 	}
 
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
-			return ErrUndefinedTable
-		}
 		return err
 	}
-	defer rows.Close()
+	defer func(rows *sqlx.Rows) {
+		err := rows.Close()
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+	}(rows)
 
 	var slice []T
 	for rows.Next() {
@@ -283,10 +266,6 @@ func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	}
 
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
-			return ErrUndefinedTable
-		}
 		return err
 	}
 	defer rows.Close()

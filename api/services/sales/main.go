@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+
 	"github.com/rmsj/service/api/services/sales/build/all"
 	"github.com/rmsj/service/api/services/sales/build/crud"
 	"github.com/rmsj/service/api/services/sales/build/reporting"
@@ -85,10 +86,10 @@ func run(ctx context.Context, log *logger.Logger) error {
 			Host string `conf:"default:http://auth-service:6000"`
 		}
 		DB struct {
-			User         string `conf:"default:postgres"`
-			Password     string `conf:"default:postgres,mask"`
+			User         string `conf:"default:db_user"`
+			Password     string `conf:"default:db_password,mask"`
 			Host         string `conf:"default:database-service"`
-			Name         string `conf:"default:postgres"`
+			Name         string `conf:"default:booking"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`

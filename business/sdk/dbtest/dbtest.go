@@ -4,11 +4,14 @@ package dbtest
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+
 	"github.com/rmsj/service/business/sdk/migrate"
 	"github.com/rmsj/service/business/sdk/sqldb"
 	"github.com/rmsj/service/foundation/docker"
@@ -27,13 +30,17 @@ type Database struct {
 // to handle testing. The database is migrated to the current version and
 // a connection pool is provided with business domain packages.
 func New(t *testing.T, testName string) *Database {
-	image := "postgres:17.2"
+	image := "mysql:9.2.0"
 	name := "servicetest"
-	port := "5432"
-	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
-	appArgs := []string{"-c", "log_statement=all"}
+	port := "3306"
+	dockerArgs := []string{
+		"-e", "MYSQL_ROOT_PASSWORD=root_password",
+		"-e", "MYSQL_USER=db_user",
+		"-e", "MYSQL_PASSWORD=db_password",
+		"--health-cmd", "mysqladmin ping -h 127.0.0.1 --silent --wait=30",
+	}
 
-	c, err := docker.StartContainer(image, name, port, dockerArgs, appArgs)
+	c, err := docker.StartContainer(image, name, port, dockerArgs, nil)
 	if err != nil {
 		t.Fatalf("Starting database: %v", err)
 	}
@@ -42,10 +49,9 @@ func New(t *testing.T, testName string) *Database {
 	t.Logf("HostPort: %s\n", c.HostPort)
 
 	dbM, err := sqldb.Open(sqldb.Config{
-		User:       "postgres",
-		Password:   "postgres",
+		User:       "root",
+		Password:   "root_password",
 		Host:       c.HostPort,
-		Name:       "postgres",
 		DisableTLS: true,
 	})
 	if err != nil {
@@ -69,15 +75,18 @@ func New(t *testing.T, testName string) *Database {
 	dbName := string(b)
 
 	t.Logf("Create Database: %s\n", dbName)
-	if _, err := dbM.ExecContext(context.Background(), "CREATE DATABASE "+dbName); err != nil {
+	if _, err := dbM.ExecContext(context.Background(), fmt.Sprintf("CREATE DATABASE %s", dbName)); err != nil {
+		t.Fatalf("creating database %s: %v", dbName, err)
+	}
+	if _, err := dbM.ExecContext(context.Background(), "GRANT ALL PRIVILEGES ON "+dbName+".* TO 'db_user'@'%' "); err != nil {
 		t.Fatalf("creating database %s: %v", dbName, err)
 	}
 
 	// -------------------------------------------------------------------------
 
 	db, err := sqldb.Open(sqldb.Config{
-		User:       "postgres",
-		Password:   "postgres",
+		User:       "db_user",
+		Password:   "db_password",
 		Host:       c.HostPort,
 		Name:       dbName,
 		DisableTLS: true,
@@ -107,8 +116,15 @@ func New(t *testing.T, testName string) *Database {
 			t.Fatalf("dropping database %s: %v", dbName, err)
 		}
 
-		db.Close()
-		dbM.Close()
+		err := db.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = dbM.Close()
+		if err != nil {
+			return
+		}
 
 		t.Logf("******************** LOGS (%s) ********************\n\n", testName)
 		t.Log(buf.String())

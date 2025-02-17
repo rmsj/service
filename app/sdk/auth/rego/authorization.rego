@@ -2,9 +2,9 @@ package ardan.rego
 
 import rego.v1
 
-role_user := "USER"
+role_user := "user"
 
-role_admin := "ADMIN"
+role_admin := "admin"
 
 role_all := {role_admin, role_user}
 

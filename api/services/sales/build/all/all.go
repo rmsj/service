@@ -5,15 +5,12 @@ import (
 	"time"
 
 	"github.com/rmsj/service/app/domain/checkapp"
-	"github.com/rmsj/service/app/domain/homeapp"
 	"github.com/rmsj/service/app/domain/productapp"
 	"github.com/rmsj/service/app/domain/rawapp"
 	"github.com/rmsj/service/app/domain/tranapp"
 	"github.com/rmsj/service/app/domain/userapp"
 	"github.com/rmsj/service/app/domain/vproductapp"
 	"github.com/rmsj/service/app/sdk/mux"
-	"github.com/rmsj/service/business/domain/homebus"
-	"github.com/rmsj/service/business/domain/homebus/stores/homedb"
 	"github.com/rmsj/service/business/domain/productbus"
 	"github.com/rmsj/service/business/domain/productbus/stores/productdb"
 	"github.com/rmsj/service/business/domain/userbus"
@@ -40,20 +37,12 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	dlg := delegate.New(cfg.Log)
 	userBus := userbus.NewBusiness(cfg.Log, dlg, userdb.NewStore(cfg.Log, cfg.DB, time.Minute))
 	productBus := productbus.NewBusiness(cfg.Log, userBus, dlg, productdb.NewStore(cfg.Log, cfg.DB))
-	homeBus := homebus.NewBusiness(cfg.Log, userBus, dlg, homedb.NewStore(cfg.Log, cfg.DB))
 	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(cfg.Log, cfg.DB))
 
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
 		DB:    cfg.DB,
-	})
-
-	homeapp.Routes(app, homeapp.Config{
-		Log:        cfg.Log,
-		UserBus:    userBus,
-		HomeBus:    homeBus,
-		AuthClient: cfg.AuthClient,
 	})
 
 	productapp.Routes(app, productapp.Config{

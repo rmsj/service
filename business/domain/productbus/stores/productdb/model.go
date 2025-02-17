@@ -17,8 +17,8 @@ type product struct {
 	Name        string    `db:"name"`
 	Cost        float64   `db:"cost"`
 	Quantity    int       `db:"quantity"`
-	DateCreated time.Time `db:"date_created"`
-	DateUpdated time.Time `db:"date_updated"`
+	DateCreated time.Time `db:"created_at"`
+	DateUpdated time.Time `db:"updated_at"`
 }
 
 func toDBProduct(bus productbus.Product) product {
