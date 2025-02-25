@@ -123,15 +123,15 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.23
+GOLANG          := golang:1.24
 ALPINE          := alpine:3.21
 KIND            := kindest/node:v1.32.0
 MYSQL        	:= mysql:9.2.0
-GRAFANA         := grafana/grafana:11.4.0
-PROMETHEUS      := prom/prometheus:v3.0.0
-TEMPO           := grafana/tempo:2.6.0
-LOKI            := grafana/loki:3.3.0
-PROMTAIL        := grafana/promtail:3.3.0
+GRAFANA         := grafana/grafana:11.5.0
+PROMETHEUS      := prom/prometheus:v3.1.0
+TEMPO           := grafana/tempo:2.7.0
+LOKI            := grafana/loki:3.4.0
+PROMTAIL        := grafana/promtail:3.4.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 ENVIRONMENT     := $(strip ${ENVIRONMENT})
@@ -385,10 +385,10 @@ pgcli:
 	pgcli postgresql://postgres:postgres@localhost
 
 liveness:
-	curl -il http://localhost:3000/v1/liveness
+	curl -i http://localhost:3000/v1/liveness
 
 readiness:
-	curl -il http://localhost:3000/v1/readiness
+	curl -i http://localhost:3000/v1/readiness
 
 token-gen:
 	export BOOKING_DB_HOST=localhost; go run api/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
@@ -436,17 +436,17 @@ test-race: test-r lint vuln-check test-down
 # Hitting endpoints
 
 token:
-	curl -il \
+	curl -i \
 	--user "admin@example.com:gophers" http://localhost:6000/v1/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
 users:
-	curl -il \
+	curl -i \
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 users-timeout:
-	curl -il \
+	curl -i \
 	--max-time 1 \
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
@@ -455,7 +455,7 @@ load:
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 otel-test:
-	curl -il \
+	curl -i \
 	-H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" \
 	--user "admin@example.com:gophers" http://localhost:6000/v1/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
@@ -495,10 +495,10 @@ run-help:
 	go run api/services/booking/main.go --help | go run api/tooling/logfmt/main.go
 
 curl:
-	curl -il http://localhost:3000/v1/hack
+	curl -i http://localhost:3000/v1/hack
 
 curl-auth:
-	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/hackauth
+	curl -i -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/hackauth
 
 load-hack:
 	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
@@ -507,13 +507,13 @@ admin:
 	go run api/tooling/admin/main.go
 
 ready:
-	curl -il http://localhost:3000/v1/readiness
+	curl -i http://localhost:3000/v1/readiness
 
 live:
-	curl -il http://localhost:3000/v1/liveness
+	curl -i http://localhost:3000/v1/liveness
 
 curl-create:
-	curl -il -X POST \
+	curl -i -X POST \
 	-H "Authorization: Bearer ${TOKEN}" \
 	-H 'Content-Type: application/json' \
 	-d '{"name":"bill","email":"b@gmail.com","roles":["admin"],"department":"ITO","password":"123","passwordConfirm":"123"}' \

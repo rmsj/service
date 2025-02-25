@@ -15,30 +15,30 @@ import (
 	"github.com/go-json-experiment/json/internal/jsonwire"
 )
 
+// ErrDuplicateName indicates that a JSON token could not be
+// encoded or decoded because it results in a duplicate JSON object name.
+// This error is directly wrapped within a [SyntacticError] when produced.
+//
+// The name of a duplicate JSON object member can be extracted as:
+//
+//	err := ...
+//	var serr jsontext.SyntacticError
+//	if errors.As(err, &serr) && serr.Err == jsontext.ErrDuplicateName {
+//		ptr := serr.JSONPointer // JSON pointer to duplicate name
+//		name := ptr.LastToken() // duplicate name itself
+//		...
+//	}
+//
+// This error is only returned if [AllowDuplicateNames] is false.
+var ErrDuplicateName = errors.New("duplicate object member name")
+
+// ErrNonStringName indicates that a JSON token could not be
+// encoded or decoded because it is not a string,
+// as required for JSON object names according to RFC 8259, section 4.
+// This error is directly wrapped within a [SyntacticError] when produced.
+var ErrNonStringName = errors.New("object member name must be a string")
+
 var (
-	// ErrDuplicateName indicates that a JSON token could not be
-	// encoded or decoded because it results in a duplicate JSON object name.
-	// This error is directly wrapped within a [SyntacticError] when produced.
-	//
-	// The name of a duplicate JSON object member can be extracted as:
-	//
-	//	err := ...
-	//	var serr jsontext.SyntacticError
-	//	if errors.As(err, &serr) && serr.Err == jsontext.ErrDuplicateName {
-	//		ptr := serr.JSONPointer // JSON pointer to duplicate name
-	//		name := ptr.LastToken() // duplicate name itself
-	//		...
-	//	}
-	//
-	// This error is only returned if [AllowDuplicateNames] is false.
-	ErrDuplicateName = errors.New("duplicate object member name")
-
-	// ErrNonStringName indicates that a JSON token could not be
-	// encoded or decoded because it is not a string,
-	// as required for JSON object names according to RFC 8259, section 4.
-	// This error is directly wrapped within a [SyntacticError] when produced.
-	ErrNonStringName = errors.New("object member name must be a string")
-
 	errMissingValue  = errors.New("missing value after object name")
 	errMismatchDelim = errors.New("mismatching structural token for object or array")
 	errMaxDepth      = errors.New("exceeded max depth")
@@ -55,7 +55,6 @@ type state struct {
 	Tokens stateMachine
 
 	// Names is a stack of object names.
-	// Not used if AllowDuplicateNames is true.
 	Names objectNameStack
 
 	// Namespaces is a stack of object namespaces.
@@ -107,11 +106,11 @@ func (p Pointer) IsValid() bool {
 	return len(p) == 0 || p[0] == '/'
 }
 
-// Contains reports whether the JSON value that p1 points to
-// is equal to or contains the JSON value that p2 points to.
-func (p1 Pointer) Contains(p2 Pointer) bool {
-	// Invariant: len(p1) <= len(p2) if p1.Contains(p2)
-	suffix, ok := strings.CutPrefix(string(p2), string(p1))
+// Contains reports whether the JSON value that p points to
+// is equal to or contains the JSON value that pc points to.
+func (p Pointer) Contains(pc Pointer) bool {
+	// Invariant: len(p) <= len(pc) if p.Contains(pc)
+	suffix, ok := strings.CutPrefix(string(pc), string(p))
 	return ok && (suffix == "" || suffix[0] == '/')
 }
 

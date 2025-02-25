@@ -75,9 +75,7 @@ type Options = jsonopts.Options
 // Properties set in later options override the value of previously set properties.
 func JoinOptions(srcs ...Options) Options {
 	var dst jsonopts.Struct
-	for _, src := range srcs {
-		dst.Join(src)
-	}
+	dst.Join(srcs...)
 	return &dst
 }
 
@@ -185,7 +183,7 @@ func OmitZeroStructFields(v bool) Options {
 
 // MatchCaseInsensitiveNames specifies that JSON object members are matched
 // against Go struct fields using a case-insensitive match of the name.
-// Go struct fields explicitly marked with `strictcase` or `nocase`
+// Go struct fields explicitly marked with `case:strict` or `case:ignore`
 // always use case-sensitive (or case-insensitive) name matching,
 // regardless of the value of this option.
 //
