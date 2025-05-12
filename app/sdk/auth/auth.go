@@ -8,15 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/open-policy-agent/opa/v1/rego"
 
 	"github.com/rmsj/service/business/domain/userbus"
-	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
 	"github.com/rmsj/service/business/sdk/id"
 	"github.com/rmsj/service/foundation/logger"
 )
@@ -41,7 +38,7 @@ type KeyLookup interface {
 // Config represents information required to initialize auth.
 type Config struct {
 	Log       *logger.Logger
-	DB        *sqlx.DB
+	UserBus   userbus.ExtBusiness
 	KeyLookup KeyLookup
 	Issuer    string
 	APIKey    string
@@ -53,7 +50,7 @@ type Config struct {
 type Auth struct {
 	log       *logger.Logger
 	keyLookup KeyLookup
-	userBus   *userbus.Business
+	userBus   userbus.ExtBusiness
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
@@ -63,18 +60,10 @@ type Auth struct {
 
 // New creates an Auth to support authentication/authorization.
 func New(cfg Config) (*Auth, error) {
-
-	// If a database connection is not provided, we won't perform the
-	// user enabled check.
-	var userBus *userbus.Business
-	if cfg.DB != nil {
-		userBus = userbus.NewBusiness(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB, 10*time.Minute))
-	}
-
 	a := Auth{
 		log:       cfg.Log,
 		keyLookup: cfg.KeyLookup,
-		userBus:   userBus,
+		userBus:   cfg.UserBus,
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,

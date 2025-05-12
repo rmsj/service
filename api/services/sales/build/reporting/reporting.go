@@ -2,16 +2,9 @@
 package reporting
 
 import (
-	"time"
-
 	"github.com/rmsj/service/app/domain/checkapp"
 	"github.com/rmsj/service/app/domain/vproductapp"
 	"github.com/rmsj/service/app/sdk/mux"
-	"github.com/rmsj/service/business/domain/userbus"
-	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
-	"github.com/rmsj/service/business/domain/vproductbus"
-	"github.com/rmsj/service/business/domain/vproductbus/stores/vproductdb"
-	"github.com/rmsj/service/business/sdk/delegate"
 	"github.com/rmsj/service/foundation/web"
 )
 
@@ -25,13 +18,6 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
-
-	// Construct the business domain packages we need here so we are using the
-	// sames instances for the different set of domain apis.
-	dlg := delegate.New(cfg.Log)
-	userBus := userbus.NewBusiness(cfg.Log, dlg, userdb.NewStore(cfg.Log, cfg.DB, time.Minute))
-	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(cfg.Log, cfg.DB))
-
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
@@ -39,8 +25,8 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	vproductapp.Routes(app, vproductapp.Config{
-		UserBus:     userBus,
-		VProductBus: vproductBus,
-		AuthClient:  cfg.AuthClient,
+		UserBus:     cfg.BusConfig.UserBus,
+		VProductBus: cfg.BusConfig.VProductBus,
+		AuthClient:  cfg.SalesConfig.AuthClient,
 	})
 }

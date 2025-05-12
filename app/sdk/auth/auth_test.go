@@ -20,7 +20,7 @@ func Test_Auth(t *testing.T) {
 
 	ath, err := auth.New(auth.Config{
 		Log:       log,
-		DB:        nil,
+		UserBus:   nil,
 		KeyLookup: &keyStore{},
 		Issuer:    "service project",
 	})

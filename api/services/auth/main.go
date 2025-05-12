@@ -18,6 +18,9 @@ import (
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/app/sdk/debug"
 	"github.com/rmsj/service/app/sdk/mux"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/sdk/delegate"
 	"github.com/rmsj/service/business/sdk/sqldb"
 	"github.com/rmsj/service/foundation/keystore"
 	"github.com/rmsj/service/foundation/logger"
@@ -147,6 +150,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	defer db.Close()
 
 	// -------------------------------------------------------------------------
+	// Create Business Packages
+
+	dlg := delegate.New(log)
+	userBus := userbus.NewBusiness(log, dlg, userdb.NewStore(log, db, time.Second*30))
+
+	// -------------------------------------------------------------------------
 	// Initialize authentication support
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
@@ -169,12 +178,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	if n1+n2 == 0 {
-		return fmt.Errorf("no keys exist: %w", err)
+		return errors.New("no keys exist")
 	}
 
 	authCfg := auth.Config{
 		Log:       log,
-		DB:        db,
+		UserBus:   userBus,
 		KeyLookup: ks,
 		Issuer:    cfg.Auth.Issuer,
 		APIKey:    cfg.Auth.APIKey,
@@ -232,6 +241,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Log:    log,
 		DB:     db,
 		Tracer: tracer,
+		BusConfig: mux.BusConfig{
+			UserBus: userBus,
+		},
 		AuthConfig: mux.AuthConfig{
 			Auth: ath,
 		},

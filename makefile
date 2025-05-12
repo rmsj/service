@@ -7,17 +7,17 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#   You need to have Go version 1.23 to run this code.
+#	You need to have Go version 1.24 to run this code.
 #
 #	https://go.dev/dl/
 #
-#   If you are not allowed to update your Go frontend, you can install
-#   and use a 1.23 frontend.
+#	If you are not allowed to update your Go frontend, you can install
+#	and use a 1.24 frontend.
 #
-#   $ go install golang.org/dl/go1.23@latest
-#   $ go1.23 download
+#	$ go install golang.org/dl/go1.24@latest
+#	$ go1.24 download
 #
-#	This means you need to use `go1.22` instead of `go` for any command
+#	This means you need to use `go1.24` instead of `go` for any command
 #	using the Go frontend tooling from the makefile.
 
 # ==============================================================================
@@ -95,7 +95,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.26 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.26.0
+# 	For full Kind v0.26 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.27.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -532,16 +532,25 @@ talk-up:
 
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 
+talk-load:
+	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER) & \
+	wait;
+
 talk-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
-	kustomize build zarf/k8s/dev/booking | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(BOOKING_APP) --timeout=120s --for=condition=Ready
+	kustomize build zarf/k8s/dev/auth | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(AUTH_APP) --timeout=120s --for=condition=Ready
 
-talk-build: all dev-load talk-apply
+	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(SALES_APP) --timeout=120s --for=condition=Ready
 
-talk-load:
+talk-run: build talk-up talk-load talk-apply
+
+talk-run-load:
 	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 talk-logs:
@@ -570,6 +579,9 @@ write-token-to-env:
 
 admin-gui-install:
 	pnpm -C ${ADMIN_FRONTEND_PREFIX} install
+
+admin-gui-update:
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} update
 
 admin-gui-dev: admin-gui-install
 	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev

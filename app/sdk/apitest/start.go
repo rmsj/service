@@ -20,7 +20,7 @@ func New(t *testing.T, testName string) *Test {
 
 	ath, err := auth.New(auth.Config{
 		Log:       db.Log,
-		DB:        db.DB,
+		UserBus:   db.BusDomain.User,
 		KeyLookup: &KeyStore{},
 		APIKey:    "api_key",
 		ActiveKID: "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1",
@@ -34,6 +34,9 @@ func New(t *testing.T, testName string) *Test {
 	server := httptest.NewServer(mux.WebAPI(mux.Config{
 		Log: db.Log,
 		DB:  db.DB,
+		BusConfig: mux.BusConfig{
+			UserBus: db.BusDomain.User,
+		},
 		AuthConfig: mux.AuthConfig{
 			Auth: ath,
 		},
@@ -46,6 +49,13 @@ func New(t *testing.T, testName string) *Test {
 	tMux := mux.WebAPI(mux.Config{
 		Log: db.Log,
 		DB:  db.DB,
+		BusConfig: mux.BusConfig{
+			AuditBus:    db.BusDomain.Audit,
+			UserBus:     db.BusDomain.User,
+			ProductBus:  db.BusDomain.Product,
+			HomeBus:     db.BusDomain.Home,
+			VProductBus: db.BusDomain.VProduct,
+		},
 		SalesConfig: mux.SalesConfig{
 			AuthClient: authClient,
 		},

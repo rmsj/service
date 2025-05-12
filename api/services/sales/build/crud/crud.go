@@ -2,18 +2,11 @@
 package crud
 
 import (
-	"time"
-
 	"github.com/rmsj/service/app/domain/checkapp"
 	"github.com/rmsj/service/app/domain/productapp"
 	"github.com/rmsj/service/app/domain/tranapp"
 	"github.com/rmsj/service/app/domain/userapp"
 	"github.com/rmsj/service/app/sdk/mux"
-	"github.com/rmsj/service/business/domain/productbus"
-	"github.com/rmsj/service/business/domain/productbus/stores/productdb"
-	"github.com/rmsj/service/business/domain/userbus"
-	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
-	"github.com/rmsj/service/business/sdk/delegate"
 	"github.com/rmsj/service/foundation/web"
 )
 
@@ -27,13 +20,6 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
-
-	// Construct the business domain packages we need here so we are using the
-	// sames instances for the different set of domain apis.
-	dlg := delegate.New(cfg.Log)
-	userBus := userbus.NewBusiness(cfg.Log, dlg, userdb.NewStore(cfg.Log, cfg.DB, time.Minute))
-	productBus := productbus.NewBusiness(cfg.Log, userBus, dlg, productdb.NewStore(cfg.Log, cfg.DB))
-
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
@@ -41,21 +27,21 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	productapp.Routes(app, productapp.Config{
-		UserBus:    userBus,
-		ProductBus: productBus,
-		AuthClient: cfg.AuthClient,
+		UserBus:    cfg.BusConfig.UserBus,
+		ProductBus: cfg.BusConfig.ProductBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 
 	tranapp.Routes(app, tranapp.Config{
-		UserBus:    userBus,
-		ProductBus: productBus,
+		UserBus:    cfg.BusConfig.UserBus,
+		ProductBus: cfg.BusConfig.ProductBus,
 		Log:        cfg.Log,
-		AuthClient: cfg.AuthClient,
+		AuthClient: cfg.SalesConfig.AuthClient,
 		DB:         cfg.DB,
 	})
 
 	userapp.Routes(app, userapp.Config{
-		UserBus:    userBus,
-		AuthClient: cfg.AuthClient,
+		UserBus:    cfg.BusConfig.UserBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 }

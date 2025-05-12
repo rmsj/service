@@ -21,6 +21,13 @@ import (
 	"github.com/rmsj/service/app/sdk/authclient"
 	"github.com/rmsj/service/app/sdk/debug"
 	"github.com/rmsj/service/app/sdk/mux"
+	"github.com/rmsj/service/business/domain/productbus"
+	"github.com/rmsj/service/business/domain/productbus/stores/productdb"
+	"github.com/rmsj/service/business/domain/userbus"
+	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
+	"github.com/rmsj/service/business/domain/vproductbus"
+	"github.com/rmsj/service/business/domain/vproductbus/stores/vproductdb"
+	"github.com/rmsj/service/business/sdk/delegate"
 	"github.com/rmsj/service/business/sdk/sqldb"
 	"github.com/rmsj/service/foundation/logger"
 	"github.com/rmsj/service/foundation/otel"
@@ -156,6 +163,16 @@ func run(ctx context.Context, log *logger.Logger) error {
 	defer db.Close()
 
 	// -------------------------------------------------------------------------
+	// Create Business Packages
+
+	userStorage := userdb.NewStore(log, db, time.Minute)
+
+	dlg := delegate.New(log)
+	userBus := userbus.NewBusiness(log, dlg, userStorage)
+	productBus := productbus.NewBusiness(log, userBus, dlg, productdb.NewStore(log, db))
+	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))
+
+	// -------------------------------------------------------------------------
 	// Initialize authentication support
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
@@ -208,6 +225,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Log:    log,
 		DB:     db,
 		Tracer: tracer,
+		BusConfig: mux.BusConfig{
+			UserBus:     userBus,
+			ProductBus:  productBus,
+			VProductBus: vproductBus,
+		},
 		SalesConfig: mux.SalesConfig{
 			AuthClient: authClient,
 		},

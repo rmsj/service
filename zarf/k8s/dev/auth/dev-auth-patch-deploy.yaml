@@ -16,9 +16,9 @@ spec:
       hostNetwork: true
 
       containers:
-      - name: auth
-        resources:
-          requests:
-            cpu: "250m"
-          limits:
-            cpu: "250m"
+        - name: auth
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "1000m"
