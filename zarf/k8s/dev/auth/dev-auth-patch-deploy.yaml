@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth
-  namespace: booking-system
+  namespace: sales-system
 
 spec:
   replicas: 1

@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: booking-system
+  name: sales-system
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tempo-conf
-  namespace: booking-system
+  namespace: sales-system
 data:
   tempo.yaml: |
     usage_report:
@@ -80,7 +80,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tempo
-  namespace: booking-system
+  namespace: sales-system
 spec:
   replicas: 1
   strategy:
@@ -91,7 +91,7 @@ spec:
       app: tempo
   template:
     metadata:
-      namespace: booking-system
+      namespace: sales-system
       labels:
         app: tempo
     spec:
@@ -129,7 +129,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: tempo
-  namespace: booking-system
+  namespace: sales-system
 spec:
   type: ClusterIP
   selector:

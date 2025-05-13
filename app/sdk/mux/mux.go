@@ -3,20 +3,21 @@
 package mux
 
 import (
-	"context"
 	"embed"
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/app/sdk/authclient"
 	"github.com/rmsj/service/app/sdk/mid"
+	"github.com/rmsj/service/business/domain/authbus"
 	"github.com/rmsj/service/business/domain/productbus"
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/domain/vproductbus"
 	"github.com/rmsj/service/foundation/logger"
 	"github.com/rmsj/service/foundation/web"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // StaticSite represents a static site to run.
@@ -64,6 +65,7 @@ type AuthConfig struct {
 
 type BusConfig struct {
 	UserBus     *userbus.Business
+	AuthBus     *authbus.Business
 	ProductBus  *productbus.Business
 	VProductBus *vproductbus.Business
 }

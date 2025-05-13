@@ -18,6 +18,8 @@ import (
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/app/sdk/debug"
 	"github.com/rmsj/service/app/sdk/mux"
+	"github.com/rmsj/service/business/domain/authbus"
+	"github.com/rmsj/service/business/domain/authbus/stores/authdb"
 	"github.com/rmsj/service/business/domain/userbus"
 	"github.com/rmsj/service/business/domain/userbus/stores/userdb"
 	"github.com/rmsj/service/business/sdk/delegate"
@@ -86,7 +88,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			User         string `conf:"default:db_user"`
 			Password     string `conf:"default:db_password,mask"`
 			Host         string `conf:"default:database-service"`
-			Name         string `conf:"default:booking"`
+			Name         string `conf:"default:sales"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
@@ -154,6 +156,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	dlg := delegate.New(log)
 	userBus := userbus.NewBusiness(log, dlg, userdb.NewStore(log, db, time.Second*30))
+	authBus := authbus.NewBusiness(log, authdb.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
 	// Initialize authentication support
@@ -242,6 +245,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:     db,
 		Tracer: tracer,
 		BusConfig: mux.BusConfig{
+			AuthBus: authBus,
 			UserBus: userBus,
 		},
 		AuthConfig: mux.AuthConfig{

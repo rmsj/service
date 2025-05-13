@@ -11,13 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<<< HEAD:vendor/github.com/prometheus/client_golang/prometheus/process_collector_wasip1_js.go
-//go:build wasip1 || js
-// +build wasip1 js
-========
 //go:build wasip1 || js || ios
 // +build wasip1 js ios
->>>>>>>> upstream/master:vendor/github.com/prometheus/client_golang/prometheus/process_collector_not_supported.go
 
 package prometheus
 

@@ -1,14 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../base/booking/
-  - ./dev-booking-configmap.yaml
+  - ../../base/sales/
+  - ./dev-sales-configmap.yaml
 patches:
-  - path: ./dev-booking-patch-deploy.yaml
-  - path: ./dev-booking-patch-service.yaml
+  - path: ./dev-sales-patch-deploy.yaml
+  - path: ./dev-sales-patch-service.yaml
 images:
-  - name: booking-image
-    newName: localhost/rmsj/booking
+  - name: sales-image
+    newName: localhost/rmsj/sales
     newTag: 0.0.1
   - name: metrics-image
     newName: localhost/rmsj/metrics

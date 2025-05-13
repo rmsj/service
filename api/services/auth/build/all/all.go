@@ -25,8 +25,8 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	authapp.Routes(app, authapp.Config{
-		AuthBus: authBus,
-		UserBus: userBus,
-		Auth:    cfg.Auth,
+		AuthBus: cfg.BusConfig.AuthBus,
+		UserBus: cfg.BusConfig.UserBus,
+		Auth:    cfg.AuthConfig.Auth,
 	})
 }

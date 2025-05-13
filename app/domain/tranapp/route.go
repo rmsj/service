@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
+
 	"github.com/rmsj/service/app/sdk/auth"
 	"github.com/rmsj/service/app/sdk/authclient"
 	"github.com/rmsj/service/app/sdk/mid"
@@ -18,7 +19,7 @@ import (
 type Config struct {
 	Log        *logger.Logger
 	DB         *sqlx.DB
-	UserBus    userbus.ExtBusiness
+	UserBus    *userbus.Business
 	ProductBus *productbus.Business
 	AuthClient *authclient.Client
 }
